@@ -26,29 +26,20 @@ export default function Dashboard({ totalProducts, lowStock, totalValue, lowStoc
                     </div>
 
 
-                    <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                        <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                            <div className="p-4 md:p-6 text-gray-900">
-                                <div className="mx-auto max-w-7xl">
-                                    <div className="">
-                                        <div className="p-0 md:p-6 text-gray-900">
-
-                                            <div className="mt-4">
-                                                <h2 className={`text-2xl md:text-3xl font-serif text-gray-900 my-5 font-bold`}>
+                                            <div className="mt-8 px-4 md:px-6">
+                                                <h2 className="text-2xl md:text-3xl font-serif text-gray-900 mb-4 font-bold">
                                                     Low Stock Products
                                                 </h2>
-
                                             </div>
-                                            <section className="text-gray-600 body-font">
-
-                                                <div className="container py-5 mx-auto overflow-x-auto">
-                                                    <table className="table-auto w-full text-left whitespace-nowrap min-w-max">
+                                            <section className="text-gray-600 body-font px-4 md:px-6">
+                                                <div className="container py-2 pb-5 mx-auto overflow-x-auto">
+                                                    <table className="table-auto w-full text-left whitespace-nowrap min-w-max border border-gray-200 rounded-lg">
                                                         <thead>
                                                             <tr>
                                                                 <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl">#</th>
                                                                 <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Name</th>
                                                                 <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Price</th>
-                                                                <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Quantity</th>
+                                                                <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br">Quantity</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -56,24 +47,14 @@ export default function Dashboard({ totalProducts, lowStock, totalValue, lowStoc
                                                                 <tr key={product.id} className={`border-b bg-white hover:bg-gray-100 ${product.quantity <= product.reorder_level ? 'bg-red-100 text-red-500' : ''}`}>
                                                                     <td className="px-4 py-3">{index + 1}</td>
                                                                     <td className="px-4 py-3">{product.name}</td>
-                                                                    <td className="px-4 py-3">{product.price}</td>
+                                                                    <td className="px-4 py-3">₹{product.price}</td>
                                                                     <td className="px-4 py-3">{product.quantity}</td>
-
                                                                 </tr>
                                                             ))}
-
-
                                                         </tbody>
                                                     </table>
                                                 </div>
-
                                             </section>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>
