@@ -3,7 +3,7 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm,usePage } from '@inertiajs/react';
 import Input from '@/Components/Input';
 export default function Register() {
     const current_dokan = usePage().props.auth.current_dokan;
