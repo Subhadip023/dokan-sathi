@@ -22,20 +22,20 @@ jobs:
           script: |
             cd /var/www/dokanSathi
             
-            # Use absolute paths or export the path manually
+            # Explicitly set the path for Bun so the non-interactive shell can find it
             export BUN_INSTALL="$HOME/.bun"
             export PATH="$BUN_INSTALL/bin:$PATH"
             
-            # Now run the commands
+            # Now run your build commands
             git pull origin main
             bun install
             bun run build
             
-            # Standard Laravel tasks
+            # Continue with Laravel deployment steps
             composer install --no-dev --optimize-autoloader
             php artisan migrate --force
             php artisan optimize
             
-            # Reset permissions so Nginx can read the new build files
+            # Reset permissions so Nginx/PHP-FPM can access the new files
             sudo chown -R www-data:www-data .
             sudo chmod -R 775 storage bootstrap/cache
