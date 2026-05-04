@@ -22,7 +22,8 @@ jobs:
           script: |
             cd /var/www/dokanSathi
             git pull origin main
-            
+            bun install
+            bun run build
             # For Laravel specific tasks:
             composer install --no-dev --optimize-autoloader
             php artisan migrate --force
