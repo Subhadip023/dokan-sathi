@@ -8,16 +8,16 @@ export default function Dashboard({ totalProducts, lowStock, totalValue, lowStoc
             <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
 
-                    <div className="p-4 md:p-6 text-gray-900 flex flex-col md:flex-row items-center justify-between gap-4">
-                        <Link href={route('products.index')} className='bg-gray-100 shadow-sm w-full md:w-1/3 p-4 h-auto md:h-32 rounded-lg text-center flex flex-col justify-center'>
-                            <h2 className='text-2xl md:text-4xl font-serif font-bold'>Product</h2>
-                            <p className='mt-2 md:mt-5 font-serif text-xl md:text-2xl'>{totalProducts} products</p>
-                        </Link>
-                        <div className={`bg-gray-100 shadow-sm w-full md:w-1/3 p-4 h-auto md:h-32 rounded-lg text-center flex flex-col justify-center ${lowStock > 0 ? 'bg-red-50 border border-red-200' : ''}`} >
+                    <div className=" p-4 md:p-6 text-gray-900 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div className={`bg-gray-100 shadow-sm w-full md:w-1/3 p-4 h-auto md:h-32 rounded-lg text-center flex flex-col justify-center ${lowStock > 0 ? 'bg-red-50 border border-red-200 hover:shadow-lg hover:shadow-red-300 transition duration-300' : ''} hover:shadow-lg hover:shadow-gray-300 transition duration-300`} >
                             <h2 className={`text-2xl md:text-4xl font-serif font-bold`}>Low Stock</h2>
                             <p className='mt-2 md:mt-5 font-serif text-xl md:text-2xl'>{lowStock} products</p>
                         </div>
-                        <div className='bg-gray-100 shadow-sm w-full md:w-1/3 p-4 h-auto md:h-32 rounded-lg text-center flex flex-col justify-center'>
+                        <Link href={route('products.index')} className='hover:shadow-lg hover:shadow-gray-300 transition duration-300 bg-gray-100 shadow-sm w-full md:w-1/3 p-4 h-auto md:h-32 rounded-lg text-center flex flex-col justify-center'>
+                            <h2 className='text-2xl md:text-4xl font-serif font-bold '>Product</h2>
+                            <p className='mt-2 md:mt-5 font-serif text-xl md:text-2xl'>{totalProducts} products</p>
+                        </Link>
+                        <div className='bg-gray-100 shadow-sm w-full md:w-1/3 p-4 h-auto md:h-32 rounded-lg text-center flex flex-col justify-center '>
                             <h2 className='text-2xl md:text-4xl font-serif font-bold'>Total Value</h2>
                             <p className='mt-2 md:mt-5 font-serif text-xl md:text-2xl'>₹{totalValue}</p>
                         </div>
