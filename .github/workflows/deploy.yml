@@ -22,23 +22,23 @@ jobs:
           script: |
             cd /var/www/dokanSathi
             
-            # 1. Setup Environment Paths
+            # 1. Take ownership so Bun/Vite can write temporary files
+            sudo chown -R dream:dream .
+            
+            # 2. Setup Environment Paths
             export BUN_INSTALL="$HOME/.bun"
             export PATH="$BUN_INSTALL/bin:$PATH"
             
-            # 2. Update Code
+            # 3. Pull and Build
             git pull origin main
-            
-            # 3. Frontend Build (using Bun)
             bun install
             bun run build
             
-            # 4. Backend Setup (Laravel)
+            # 4. Laravel Tasks
             composer install --no-dev --optimize-autoloader
             php artisan migrate --force
             php artisan optimize
             
-            # 5. Reset Permissions
-            # Ensure your user has NOPASSWD set in visudo for these to work
+            # 5. Restore permissions for the Web Server
             sudo chown -R www-data:www-data .
             sudo chmod -R 775 storage bootstrap/cache
