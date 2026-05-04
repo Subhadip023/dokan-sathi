@@ -32,7 +32,22 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $request->user() ? [
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'email' => $request->user()->email,
+                    // Add only the fields you actually use in the Navbar/Sidebar
+                ] : null,
+
+                // Use a closure to prevent unnecessary DB hits on every request
+                'current_dokan' => fn() => $request->user()
+                    ? $request->user()->dokans()->first()
+                    : null,
+            ],
+            // Flash messages for your Toasts (helpful for your sync-quantity success)
+            'flash' => [
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
             ],
         ];
     }

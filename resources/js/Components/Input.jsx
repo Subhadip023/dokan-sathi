@@ -2,7 +2,7 @@ import React from 'react';
 
 const Input = ({ label, name, type = "text", error ,addClass, ...props }) => {
   return (
-    <div className={` text-left ${addClass || ''}`}>
+    <div className={` text-left text-black bg-transparent border-gray-600 focus:border-gray-500 focus:ring-gray-200 ${addClass || ''}`}>
       {label && (
         <label
           htmlFor={name}

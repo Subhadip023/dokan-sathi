@@ -24,7 +24,7 @@ class ProductController extends Controller
                         ->orWhere('description', 'like', "%{$search}%");
                 })
                 ->latest()
-                ->paginate(10)
+                ->paginate(5)
                 ->withQueryString(), 
             'filters' => $request->only(['search']), 
         ]);

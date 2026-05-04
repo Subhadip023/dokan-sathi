@@ -45,4 +45,8 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function dokans(){
+        return $this->hasMany(Dokan::class, 'owner_id');
+    }
 }

@@ -4,13 +4,18 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-
+import Input from '@/Components/Input';
 export default function Register() {
+    const current_dokan = usePage().props.auth.current_dokan;
+    
     const { data, setData, post, processing, errors, reset } = useForm({
+        dokan_id: current_dokan?.id,
         name: '',
         email: '',
         password: '',
         password_confirmation: '',
+        dokan_name: '',
+        dokan_address: '',
     });
 
     const submit = (e) => {
@@ -101,6 +106,54 @@ export default function Register() {
                         className="mt-2"
                     />
                 </div>
+                <div className="mt-4">
+                    <InputLabel
+                        htmlFor="dokan_name"
+                        value="Dokan Name"
+                    />
+
+                    <TextInput
+                        id="dokan_name"
+                        type="text"
+                        name="dokan_name"
+                        value={data.dokan_name}
+                        className="mt-1 block w-full"
+                        autoComplete="dokan_name"
+                        onChange={(e) =>
+                            setData('dokan_name', e.target.value)
+                        }
+                        required
+                    />
+
+                    <InputError
+                        message={errors.dokan_name}
+                        className="mt-2"
+                    />
+                </div><div className="mt-4">
+                    <InputLabel
+                        htmlFor="dokan_address"
+                        value="Dokan Address"
+                    />
+
+                    <TextInput
+                        id="dokan_address"
+                        type="text"
+                        name="dokan_address"
+                        value={data.dokan_address}
+                        className="mt-1 block w-full"
+                        autoComplete="dokan_address"
+                        onChange={(e) =>
+                            setData('dokan_address', e.target.value)
+                        }
+                        required
+                    />
+
+                    <InputError
+                        message={errors.dokan_name}
+                        className="mt-2"
+                    />
+                </div>
+               
 
                 <div className="mt-4 flex items-center justify-end">
                     <Link

@@ -3,7 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-
+use Illuminate\Validation\Rule;
 class StoreProductRequest extends FormRequest
 {
     /**
@@ -25,6 +25,14 @@ class StoreProductRequest extends FormRequest
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:1',
             'quantity' => 'required|integer|min:1',
+            'description' => 'nullable|string',
+            'reorder_level' => 'required|integer|min:0',
+            'dokan_id' => [
+                'required',
+                    Rule::exists('dokans', 'id')->where(function ($query) {
+                        return $query->where('owner_id', $this->user()->id);
+                        }),
+                    ],
         ];
     }
 }

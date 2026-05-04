@@ -13,6 +13,7 @@ use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\Dokan;
 
 class RegisteredUserController extends Controller
 {
@@ -35,12 +36,21 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'dokan_name' => ['required', 'string', 'max:255'],
+            'dokan_address' => ['nullable', 'string', 'max:255'],
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+        ]);
+
+        $dokan = Dokan::create([
+            'name' => $request->dokan_name,
+            'description' => '',
+            'location' => $request->dokan_address,
+            'owner_id' => $user->id,
         ]);
 
         event(new Registered($user));

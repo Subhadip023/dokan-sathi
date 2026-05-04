@@ -4,21 +4,22 @@ import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { Toaster,toast } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
+    const current_dokan = usePage().props.auth.current_dokan;
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
 
-    
+
     return (
         <div className="min-h-screen bg-gray-100">
             <div><Toaster
-            position="top-right"
-            reverseOrder={false}
+                position="top-right"
+                reverseOrder={false}
             /></div>
             <nav className="border-b border-gray-100 bg-white">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ">
                     <div className="flex h-16 justify-between">
                         <div className="flex">
                             <div className="flex shrink-0 items-center">
@@ -174,14 +175,18 @@ export default function AuthenticatedLayout({ header, children }) {
             </nav>
 
             {header && (
-                <header className="bg-white shadow">
+                <header className="bg-white shadow w-full">
                     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                        {header}
+                        {current_dokan && (
+                            <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                                {current_dokan.name} : {header}
+                            </h2>
+                        )}
                     </div>
                 </header>
             )}
 
-            <main>{children}</main>
+            <main className='py-6'>{children}</main>
         </div>
     );
 }

@@ -1,17 +1,23 @@
 <?php
 
-namespace Database\Seeders;
+namespace App\Http\Controllers;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
+use Illuminate\Http\Request;
+use App\Models\Product;
+use Inertia\Inertia;
 
-class ProductSeeder extends Seeder
+class DemoController extends Controller
 {
     /**
-     * Run the database seeds.
+     * Handle the incoming request.
      */
-    public function run(): void
+    public function __invoke(Request $request)
     {
+        $dokan = $request->user()->dokans()->first();
+        if ($dokan->products()->count() > 0) {
+            dd('This is only for no product dokans ');
+        }
+
         $medicines = [
             // Pain & Injuries
             ['name' => 'Arnica Montana', 'desc' => 'Injuries, bruising, muscle soreness'],
@@ -145,17 +151,17 @@ class ProductSeeder extends Seeder
         foreach ($medicines as $med) {
             $potencies = $med['potencies'] ?? $defaultPotencies;
             foreach ($potencies as $potency) {
-                \App\Models\Product::create([
+                Product::create([
                     'name'         => $med['name'] . ' ' . $potency,
                     'description'  => $med['desc'],
                     'price'        => rand(95, 450),
                     'quantity'     => rand(5, 60),
                     'reorder_level' => rand(5, 15),
-                    'dokan_id'     => 1,
+                    'dokan_id'     => $dokan->id,
                 ]);
             }
         }
+
+        return redirect()->route('products.index');
     }
 }
-
-// php artisan db:seed --class=ProductSeeder
