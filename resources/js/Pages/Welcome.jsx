@@ -14,12 +14,7 @@ export default function Welcome({ auth }) {
                         </div>
                         <nav className="flex flex-1 justify-end space-x-4">
                             {auth.user ? (
-                                <Link
-                                    href={route('dashboard')}
-                                    className="rounded-md px-4 py-2 text-white bg-indigo-600 hover:bg-indigo-700 transition font-medium shadow-sm"
-                                >
-                                    Dashboard
-                                </Link>
+                                <></>
                             ) : (
                                 <>
                                     <Link
