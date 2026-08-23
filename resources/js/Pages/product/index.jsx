@@ -12,7 +12,7 @@ import { MdDeleteOutline } from "react-icons/md";
 import QuantityTicker from '@/Components/QuantityTicker';
 import Pagination from '@/Components/Pagination';
 import debounce from 'lodash/debounce';
-export default function Dashboard({ products, filters }) {
+export default function Dashboard({ products, summary, filters }) {
     const current_dokan = usePage().props.auth.current_dokan;
 
     const [showModal, setShowModal] = useState(false);
@@ -21,9 +21,11 @@ export default function Dashboard({ products, filters }) {
     const { data, setData, post, errors, put, delete: deleteProduct } = useForm({
         dokan_id: current_dokan?.id,
         name: '',
-        price: '',
-        quantity: 1,
         description: '',
+        purchased_packets: '',
+        packet_size: 1,
+        cost_rate: '',
+        selling_rate: '',
         reorder_level: 5,
     });
 
@@ -44,18 +46,26 @@ export default function Dashboard({ products, filters }) {
         performSearch(value);
     };
 
+    const resetForm = () => {
+        setData({
+            dokan_id: current_dokan?.id,
+            name: '',
+            description: '',
+            purchased_packets: '',
+            packet_size: 1,
+            cost_rate: '',
+            selling_rate: '',
+            reorder_level: 5,
+        });
+    };
+
     const saveForm = (e) => {
         e.preventDefault();
-        console.log(data)
         const options = {
             onSuccess: () => {
                 toast.success(isEdit ? 'Product updated successfully' : 'Product added successfully');
                 setShowModal(false);
-                setData({
-                    name: '',
-                    price: '',
-                    quantity: ''
-                });
+                resetForm();
             },
             onError: (error) => {
                 console.log(error);
@@ -70,18 +80,20 @@ export default function Dashboard({ products, filters }) {
     };
 
     const editProduct = (product) => {
-        setIdEdit(true)
+        setIdEdit(true);
 
         setData({
             dokan_id: current_dokan?.id,
             id: product.id,
             name: product.name,
-            price: product.price,
-            quantity: parseInt(product.quantity) || 1,
-            description: product.description,
-            reorder_level: parseInt(product.reorder_level) || 5,
+            description: product.description || '',
+            purchased_packets: product.purchased_packets ?? '',
+            packet_size: product.packet_size ?? 1,
+            cost_rate: product.cost_rate ?? '',
+            selling_rate: product.selling_rate ?? '',
+            reorder_level: product.reorder_level ?? 5,
         });
-        setShowModal(true)
+        setShowModal(true);
     };
 
     const deleteProductfunc = (id) => {
@@ -102,7 +114,7 @@ export default function Dashboard({ products, filters }) {
         <AuthenticatedLayout
             header={`Products`}
         >
-            <Head title="Dashboard" />
+            <Head title="Products" />
             <Modal show={showModal} onClose={() => setShowModal(false)}>
                 <div className="p-6 text-gray-900">
                     <h2 className="text-lg font-medium text-gray-900">
@@ -121,34 +133,60 @@ export default function Dashboard({ products, filters }) {
                         />
 
                         <Input
-                            label="Price"
-                            name="price"
-                            id="price"
+                            label="Purchased Packets"
+                            name="purchased_packets"
+                            id="purchased_packets"
                             type="number"
-                            value={data.price}
-                            onChange={(e) => setData('price', e.target.value)}
-                            error={errors.price}
+                            value={data.purchased_packets}
+                            onChange={(e) => setData('purchased_packets', e.target.value)}
+                            error={errors.purchased_packets}
+                            addClass={'w-full md:w-1/2 md:pr-2'}
+                        />
+
+                        <Input
+                            label="Packet Size"
+                            name="packet_size"
+                            id="packet_size"
+                            type="number"
+                            value={data.packet_size}
+                            onChange={(e) => setData('packet_size', e.target.value)}
+                            error={errors.packet_size}
+                            addClass={'w-full md:w-1/2 md:pl-2'}
+                        />
+
+                        <Input
+                            label="Cost Rate (₹)"
+                            name="cost_rate"
+                            id="cost_rate"
+                            type="number"
+                            step="0.01"
+                            value={data.cost_rate}
+                            onChange={(e) => setData('cost_rate', e.target.value)}
+                            error={errors.cost_rate}
                             addClass={'w-full md:w-1/3 md:pr-2'}
                         />
+
                         <Input
-                            label="Quantity"
-                            name="quantity"
-                            id="quantity"
+                            label="Selling Rate (₹)"
+                            name="selling_rate"
+                            id="selling_rate"
                             type="number"
-                            value={parseInt(data.quantity) || ''}
-                            onChange={(e) => setData('quantity', parseInt(e.target.value) || '')}
-                            error={errors.quantity}
-                            addClass={'w-full md:w-1/3 md:px-2 mt-4 md:mt-0'}
+                            step="0.01"
+                            value={data.selling_rate}
+                            onChange={(e) => setData('selling_rate', e.target.value)}
+                            error={errors.selling_rate}
+                            addClass={'w-full md:w-1/3 md:px-2'}
                         />
+
                         <Input
                             label="Reorder Level"
                             name="reorder_level"
                             id="reorder_level"
                             type="number"
-                            value={parseInt(data.reorder_level) || ''}
-                            onChange={(e) => setData('reorder_level', parseInt(e.target.value) || '')}
+                            value={data.reorder_level}
+                            onChange={(e) => setData('reorder_level', e.target.value)}
                             error={errors.reorder_level}
-                            addClass={'w-full md:w-1/3 md:pl-2 mt-4 md:mt-0'}
+                            addClass={'w-full md:w-1/3 md:pl-2'}
                         />
 
                         <div className="w-full">
@@ -166,21 +204,13 @@ export default function Dashboard({ products, filters }) {
                         </div>
 
                         <div className="w-full mb-4 items-end flex justify-end">
-
                             <SecondaryButton className='mr-3' onClick={() => {
                                 setShowModal(false);
-                                setData({
-                                    dokan_id: current_dokan?.id,
-                                    name: "",
-                                    price: "",
-                                    quantity: 1,
-                                    description: "",
-                                    reorder_level: 5,
-                                })
-                            }} >
-                                cancel
+                                resetForm();
+                            }}>
+                                Cancel
                             </SecondaryButton>
-                            <PrimaryButton className='' type="submit">Save</PrimaryButton>
+                            <PrimaryButton type="submit">Save</PrimaryButton>
                         </div>
                     </form>
                 </div>
@@ -189,7 +219,7 @@ export default function Dashboard({ products, filters }) {
                 <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                     <div className="p-4 md:p-6 text-gray-900">
                         <div className="mx-auto max-w-7xl">
-                            <div className="">
+                            <div>
                                 <div className="p-0 md:p-6 text-gray-900">
 
                                     <div className="mt-4">
@@ -203,7 +233,7 @@ export default function Dashboard({ products, filters }) {
                                                 onChange={handleSearchChange}
                                                 addClass={'w-full md:w-1/2'}
                                             />
-                                            <PrimaryButton onClick={() => { setShowModal(true); setIdEdit(false); }} className='w-full md:w-auto flex items-center justify-center'>
+                                            <PrimaryButton onClick={() => { resetForm(); setShowModal(true); setIdEdit(false); }} className='w-full md:w-auto flex items-center justify-center'>
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 mr-1">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                                 </svg>
@@ -217,26 +247,27 @@ export default function Dashboard({ products, filters }) {
                                             {/* Mobile View (Cards) */}
                                             <div className="block md:hidden space-y-4">
                                                 {products.data.map((product, index) => (
-                                                    <div key={product.id} className={`p-4 rounded-lg border shadow-sm ${product.quantity <= product.reorder_level ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-200'}`}>
+                                                    <div key={product.id} className={`p-4 rounded-lg border shadow-sm ${product.purchased_packets <= product.reorder_level ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-200'}`}>
                                                         <div className="flex justify-between items-start mb-2">
                                                             <div>
                                                                 <span className="text-xs font-semibold text-gray-500 block mb-1">#{index + 1}</span>
                                                                 <span className="font-bold text-gray-900 text-lg">{product.name}</span>
                                                             </div>
-                                                            <div className="text-right">
-                                                                <span className="font-bold text-gray-900 block">{product.price}</span>
+                                                            <div className="text-right text-sm">
+                                                                <span className="text-gray-500 block text-xs">Selling: ₹{product.selling_rate}</span>
+                                                                <span className="text-gray-500 block text-xs">Cost: ₹{product.cost_rate}</span>
                                                             </div>
                                                         </div>
                                                         <div className="text-sm text-gray-600 mb-3 line-clamp-2">{product.description}</div>
                                                         
                                                         <div className="flex justify-between items-center mb-3">
                                                             <div className="flex flex-col">
-                                                                <span className="text-xs text-gray-500">Quantity</span>
+                                                                <span className="text-xs text-gray-500">Packets</span>
                                                                 <QuantityTicker product={product} />
                                                             </div>
-                                                            <div className="flex flex-col items-end">
-                                                                <span className="text-xs text-gray-500">Reorder</span>
-                                                                <span className="font-semibold">{product.reorder_level}</span>
+                                                            <div className="flex flex-col items-end text-xs">
+                                                                <span className="text-gray-500">Packet Size: <strong>{product.packet_size}</strong></span>
+                                                                <span className="text-gray-500">Reorder: <strong>{product.reorder_level}</strong></span>
                                                             </div>
                                                         </div>
 
@@ -260,22 +291,26 @@ export default function Dashboard({ products, filters }) {
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">#</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Name</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Description</th>
-                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Price</th>
-                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Quantity</th>
+                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Purchased Packets</th>
+                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Packet Size</th>
+                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Cost Rate</th>
+                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Selling Rate</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Reorder Level</th>
                                                             <th className="px-4 py-3 title-font text-center font-medium text-gray-900 text-sm bg-gray-100">Actions</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
                                                         {products.data.map((product, index) => (
-                                                            <tr key={product.id} className={`border-b bg-white hover:bg-gray-50 ${product.quantity <= product.reorder_level ? 'bg-red-50 text-red-600' : ''}`}>
+                                                            <tr key={product.id} className={`border-b bg-white hover:bg-gray-50 ${product.purchased_packets <= product.reorder_level ? 'bg-red-50 text-red-600' : ''}`}>
                                                                 <td className="px-4 py-3">{index + 1}</td>
-                                                                <td className="px-4 py-3">{product.name}</td>
+                                                                <td className="px-4 py-3 font-medium text-gray-900">{product.name}</td>
                                                                 <td className="px-4 py-3 max-w-xs truncate" title={product.description}>{product.description}</td>
-                                                                <td className="px-4 py-3">{product.price}</td>
                                                                 <td className="px-4 py-3">
                                                                     <QuantityTicker product={product} />
                                                                 </td>
+                                                                <td className="px-4 py-3">{product.packet_size}</td>
+                                                                <td className="px-4 py-3">₹{product.cost_rate}</td>
+                                                                <td className="px-4 py-3">₹{product.selling_rate}</td>
                                                                 <td className="px-4 py-3">{product.reorder_level}</td>
                                                                 <td className="px-4 py-3 flex items-center justify-center gap-x-2">
                                                                     <button onClick={() => editProduct(product)} className='mr-2 text-blue-600 hover:scale-110 transition-all duration-200 ease-in-out'>
@@ -289,10 +324,25 @@ export default function Dashboard({ products, filters }) {
                                                             </tr>
                                                         ))}
                                                     </tbody>
+                                                    {summary && (
+                                                        <tfoot className="bg-gray-100 font-bold border-t-2 border-gray-300 text-sm">
+                                                            <tr>
+                                                                <td colSpan="3" className="px-4 py-3.5 text-right uppercase text-xs tracking-wider text-gray-700">Total Stock & Valuation:</td>
+                                                                <td className="px-4 py-3.5 text-indigo-700 font-mono">
+                                                                    {summary.totalPackets} pkts <span className="text-xs text-gray-500 font-normal">({summary.totalPieces} pcs)</span>
+                                                                </td>
+                                                                <td className="px-4 py-3.5 text-gray-400 font-mono text-xs">-</td>
+                                                                <td className="px-4 py-3.5 text-amber-700 font-mono">₹{summary.totalCostValuation.toLocaleString()}</td>
+                                                                <td className="px-4 py-3.5 text-emerald-700 font-mono">₹{summary.totalSellingValuation.toLocaleString()}</td>
+                                                                <td colSpan="2" className="px-4 py-3.5"></td>
+                                                            </tr>
+                                                        </tfoot>
+                                                    )}
                                                 </table>
                                             </div>
                                         </div>
-                                        <div className="flex justify-center">
+
+                                        <div className="flex justify-center mt-4">
                                             <Pagination links={products.links} />
                                         </div>
                                     </section>

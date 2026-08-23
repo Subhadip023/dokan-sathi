@@ -4,7 +4,8 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-class StoreProductRequest extends FormRequest
+
+class UpdateSaleRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,13 +23,21 @@ class StoreProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'reorder_level' => 'required|integer|min:0',
-            'purchased_packets' => 'required|integer|min:0',
-            'packet_size' => 'required|integer|min:1',
-            'cost_rate' => 'required|numeric|min:0',
-            'selling_rate' => 'required|numeric|min:0',
+            'sale_date' => 'required|date',
+            'customer_id' => [
+                'nullable',
+                Rule::exists('coustomers', 'id')->where(function ($query) {
+                    return $query->where('dokan_id', $this->dokan_id);
+                }),
+            ],
+            'product_id' => [
+                'required',
+                Rule::exists('products', 'id')->where(function ($query) {
+                    return $query->where('dokan_id', $this->dokan_id);
+                }),
+            ],
+            'qty' => 'required|integer|min:1',
+            'discount' => 'nullable|numeric|min:0',
             'dokan_id' => [
                 'required',
                 Rule::exists('dokans', 'id')->where(function ($query) {

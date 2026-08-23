@@ -24,4 +24,12 @@ class Dokan extends Model
     public function products(){
         return $this->hasMany(Product::class,'dokan_id');
     }
+
+    public function coustomers(){
+        return $this->hasMany(Coustomer::class, 'dokan_id');
+    }
+
+    public function sales(){
+        return $this->hasMany(Sale::class, 'dokan_id');
+    }
 }

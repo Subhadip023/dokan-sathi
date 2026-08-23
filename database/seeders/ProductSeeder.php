@@ -145,13 +145,17 @@ class ProductSeeder extends Seeder
         foreach ($medicines as $med) {
             $potencies = $med['potencies'] ?? $defaultPotencies;
             foreach ($potencies as $potency) {
+                $costRate = rand(50, 300);
+                $sellingRate = $costRate + rand(20, 100);
                 \App\Models\Product::create([
-                    'name'         => $med['name'] . ' ' . $potency,
-                    'description'  => $med['desc'],
-                    'price'        => rand(95, 450),
-                    'quantity'     => rand(5, 60),
-                    'reorder_level' => rand(5, 15),
-                    'dokan_id'     => 1,
+                    'name'              => $med['name'] . ' ' . $potency,
+                    'description'       => $med['desc'],
+                    'purchased_packets' => rand(5, 60),
+                    'packet_size'       => 1,
+                    'cost_rate'         => $costRate,
+                    'selling_rate'      => $sellingRate,
+                    'reorder_level'     => rand(5, 15),
+                    'dokan_id'          => 1,
                 ]);
             }
         }

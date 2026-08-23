@@ -1,0 +1,237 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\StoreSaleRequest;
+use App\Http\Requests\UpdateSaleRequest;
+use App\Models\Sale;
+use App\Models\Product;
+use App\Models\Coustomer;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+use Illuminate\Support\Facades\DB;
+
+class SaleController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request): Response
+    {
+        $dokan = $request->user()->dokans()->first();
+
+        $query = Sale::with(['product', 'customer'])
+            ->where('dokan_id', $dokan?->id);
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('product', function ($pq) use ($search) {
+                    $pq->where('name', 'like', "%{$search}%");
+                })->orWhereHas('customer', function ($cq) use ($search) {
+                    $cq->where('name', 'like', "%{$search}%")
+                      ->orWhere('phone', 'like', "%{$search}%");
+                })->orWhere('sale_date', 'like', "%{$search}%");
+            });
+        }
+
+        $allMatchingSales = $query->latest('sale_date')->latest('id')->get();
+
+        // Group sales into customer invoice transactions
+        $invoices = $allMatchingSales->groupBy(function ($sale) {
+            $cust = $sale->customer_id ?? 'walkin';
+            $time = $sale->created_at ? $sale->created_at->format('Y-m-d H:i') : $sale->sale_date;
+            return "{$sale->sale_date}_{$cust}_{$time}";
+        })->map(function ($group, $key) {
+            $first = $group->first();
+            $totalAmount = $group->sum(fn($s) => $s->total_amount);
+            $totalProfit = $group->sum(fn($s) => $s->profit);
+            $totalPackets = $group->sum('qty');
+            $totalPieces = $group->sum(fn($s) => $s->qty * $s->packet_size);
+
+            return [
+                'id' => $key,
+                'first_sale_id' => $first->id,
+                'sale_date' => $first->sale_date,
+                'created_at' => $first->created_at ? $first->created_at->format('Y-m-d H:i:s') : $first->sale_date,
+                'customer' => $first->customer ? [
+                    'id' => $first->customer->id,
+                    'name' => $first->customer->name,
+                    'phone' => $first->customer->phone,
+                ] : null,
+                'items_count' => $group->count(),
+                'total_packets' => $totalPackets,
+                'total_pieces' => $totalPieces,
+                'total_amount' => round($totalAmount, 2),
+                'total_profit' => round($totalProfit, 2),
+                'items' => $group->map(fn($s) => [
+                    'id' => $s->id,
+                    'product_id' => $s->product_id,
+                    'product_name' => $s->product ? $s->product->name : 'Deleted Product',
+                    'qty' => $s->qty,
+                    'packet_size' => $s->packet_size,
+                    'rate' => $s->rate,
+                    'cost_rate' => $s->cost_rate,
+                    'discount' => $s->discount,
+                    'total_amount' => round($s->total_amount, 2),
+                    'profit' => round($s->profit, 2),
+                ])->values()->all(),
+                'sale_ids' => $group->pluck('id')->all(),
+            ];
+        })->values();
+
+        // Manual Paginator for Inertia
+        $page = \Illuminate\Pagination\Paginator::resolveCurrentPage() ?: 1;
+        $perPage = 15;
+        $slice = $invoices->slice(($page - 1) * $perPage, $perPage)->values();
+        $paginatedInvoices = new \Illuminate\Pagination\LengthAwarePaginator(
+            $slice,
+            $invoices->count(),
+            $perPage,
+            $page,
+            ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(), 'query' => $request->query()]
+        );
+
+        // Summary Calculations for Dokan
+        $allSales = Sale::where('dokan_id', $dokan?->id)->get();
+        $totalRevenue = $allSales->sum(fn($s) => $s->total_amount);
+        $totalProfit = $allSales->sum(fn($s) => $s->profit);
+        $totalInvoices = $invoices->count();
+
+        $products = Product::where('dokan_id', $dokan?->id)->get(['id', 'name', 'selling_rate', 'cost_rate', 'packet_size', 'purchased_packets']);
+        $customers = Coustomer::where('dokan_id', $dokan?->id)->get(['id', 'name', 'phone']);
+
+        return Inertia::render('sale/index', [
+            'invoices' => $paginatedInvoices,
+            'summary' => [
+                'totalRevenue' => round($totalRevenue, 2),
+                'totalProfit' => round($totalProfit, 2),
+                'totalInvoices' => $totalInvoices,
+            ],
+            'products' => $products,
+            'customers' => $customers,
+            'filters' => $request->only(['search']),
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new sale.
+     */
+    public function create(Request $request): Response
+    {
+        $dokan = $request->user()->dokans()->first();
+        $products = Product::where('dokan_id', $dokan?->id)->get(['id', 'name', 'selling_rate', 'cost_rate', 'packet_size', 'purchased_packets']);
+        $customers = Coustomer::where('dokan_id', $dokan?->id)->get(['id', 'name', 'phone']);
+
+        return Inertia::render('sale/create', [
+            'products' => $products,
+            'customers' => $customers,
+        ]);
+    }
+
+    /**
+     * Store newly created resources in storage (supports multiple products per sale).
+     */
+    public function store(StoreSaleRequest $request)
+    {
+        $dokan = $request->user()->dokans()->first();
+
+        DB::transaction(function () use ($request, $dokan) {
+            $numItems = count($request->items);
+            $extraDiscountPerItem = ($numItems > 0 && $request->filled('order_discount'))
+                ? floatval($request->order_discount) / $numItems
+                : 0;
+
+            foreach ($request->items as $item) {
+                $product = Product::where('dokan_id', $dokan?->id)->lockForUpdate()->findOrFail($item['product_id']);
+                $totalItemDiscount = (floatval($item['discount'] ?? 0)) + $extraDiscountPerItem;
+
+                Sale::create([
+                    'dokan_id' => $dokan->id,
+                    'sale_date' => $request->sale_date,
+                    'customer_id' => $request->customer_id ?: null,
+                    'product_id' => $product->id,
+                    'qty' => $item['qty'],
+                    'packet_size' => $product->packet_size,
+                    'rate' => $product->selling_rate,
+                    'cost_rate' => $product->cost_rate,
+                    'discount' => round($totalItemDiscount, 2),
+                ]);
+
+                // Deduct sold packets from product inventory
+                $product->decrement('purchased_packets', $item['qty']);
+            }
+        });
+
+        $count = count($request->items);
+        $msg = $count > 1 ? "Sale with {$count} products recorded successfully." : "Sale recorded successfully.";
+
+        return redirect()->route('sales.index')->with('success', $msg);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UpdateSaleRequest $request, Sale $sale)
+    {
+        $dokan = $request->user()->dokans()->first();
+        if ($sale->dokan_id !== $dokan?->id) {
+            abort(403);
+        }
+
+        DB::transaction(function () use ($request, $sale, $dokan) {
+            // Restore previous product stock
+            $oldProduct = Product::where('dokan_id', $dokan?->id)->lockForUpdate()->find($sale->product_id);
+            if ($oldProduct) {
+                $oldProduct->increment('purchased_packets', $sale->qty);
+            }
+
+            // Deduct new product stock
+            $newProduct = Product::where('dokan_id', $dokan?->id)->lockForUpdate()->findOrFail($request->product_id);
+            $newProduct->decrement('purchased_packets', $request->qty);
+
+            $sale->update([
+                'sale_date' => $request->sale_date,
+                'customer_id' => $request->customer_id ?: null,
+                'product_id' => $newProduct->id,
+                'qty' => $request->qty,
+                'packet_size' => $newProduct->packet_size,
+                'rate' => $newProduct->selling_rate,
+                'cost_rate' => $newProduct->cost_rate,
+                'discount' => $request->discount ?? 0,
+            ]);
+        });
+
+        return redirect()->route('sales.index')->with('success', 'Sale item updated successfully.');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Request $request, Sale $sale)
+    {
+        $dokan = $request->user()->dokans()->first();
+        if ($sale->dokan_id !== $dokan?->id) {
+            abort(403);
+        }
+
+        DB::transaction(function () use ($request, $sale, $dokan) {
+            $saleIds = $request->input('sale_ids');
+            if (is_array($saleIds) && count($saleIds) > 0) {
+                $salesToDelete = Sale::where('dokan_id', $dokan?->id)->whereIn('id', $saleIds)->get();
+            } else {
+                $salesToDelete = collect([$sale]);
+            }
+
+            foreach ($salesToDelete as $item) {
+                $product = Product::where('dokan_id', $dokan?->id)->lockForUpdate()->find($item->product_id);
+                if ($product) {
+                    $product->increment('purchased_packets', $item->qty);
+                }
+                $item->delete();
+            }
+        });
+
+        return redirect()->route('sales.index')->with('success', 'Sale invoice deleted and stock restored.');
+    }
+}

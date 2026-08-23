@@ -36,17 +36,19 @@ export default function Dashboard({ totalProducts, lowStock, totalValue, lowStoc
                                     <tr>
                                         <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl">#</th>
                                         <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Name</th>
-                                        <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Price</th>
-                                        <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br">Quantity</th>
+                                        <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Cost Rate</th>
+                                        <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Selling Rate</th>
+                                        <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br">Packets</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {lowStockProducts.map((product, index) => (
-                                        <tr key={product.id} className={`border-b bg-white hover:bg-gray-100 ${product.quantity <= product.reorder_level ? 'bg-red-100 text-red-500' : ''}`}>
+                                        <tr key={product.id} className={`border-b bg-white hover:bg-gray-100 ${product.purchased_packets <= product.reorder_level ? 'bg-red-100 text-red-500' : ''}`}>
                                             <td className="px-4 py-3">{index + 1}</td>
                                             <td className="px-4 py-3">{product.name}</td>
-                                            <td className="px-4 py-3">₹{product.price}</td>
-                                            <td className="px-4 py-3">{product.quantity}</td>
+                                            <td className="px-4 py-3">₹{product.cost_rate}</td>
+                                            <td className="px-4 py-3">₹{product.selling_rate}</td>
+                                            <td className="px-4 py-3">{product.purchased_packets}</td>
                                         </tr>
                                     ))}
                                 </tbody>

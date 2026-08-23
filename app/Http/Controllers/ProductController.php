@@ -17,16 +17,32 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
+        $dokan = $request->user()->dokans()->first();
+
+        $allProducts = Product::where('dokan_id', $dokan?->id)->get();
+        $totalPackets = $allProducts->sum('purchased_packets');
+        $totalPieces = $allProducts->sum(fn($p) => $p->purchased_packets * $p->packet_size);
+        $totalCostValuation = $allProducts->sum(fn($p) => $p->purchased_packets * $p->cost_rate);
+        $totalSellingValuation = $allProducts->sum(fn($p) => $p->purchased_packets * $p->selling_rate);
+
         return Inertia::render('product/index', [
             'products' => Product::query()
+                ->where('dokan_id', $dokan?->id)
                 ->when($request->input('search'), function ($query, $search) {
                     $query->where('name', 'like', "%{$search}%")
                         ->orWhere('description', 'like', "%{$search}%");
                 })
                 ->latest()
                 ->paginate(15)
-                ->withQueryString(), 
-            'filters' => $request->only(['search']), 
+                ->withQueryString(),
+            'summary' => [
+                'totalCount' => $allProducts->count(),
+                'totalPackets' => $totalPackets,
+                'totalPieces' => $totalPieces,
+                'totalCostValuation' => round($totalCostValuation, 2),
+                'totalSellingValuation' => round($totalSellingValuation, 2),
+            ],
+            'filters' => $request->only(['search']),
         ]);
     }
 
@@ -75,15 +91,14 @@ class ProductController extends Controller
     {
         $request->validate([
             'id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:0',
+            'purchased_packets' => 'required|integer|min:0',
         ]);
 
         $product = Product::findOrFail($request->id);
-        $product->quantity = $request->quantity;
+        $product->purchased_packets = $request->purchased_packets;
         $product->save();
 
-        return redirect()->back()->with('success', 'Quantity updated successfully');
-        
+        return redirect()->back()->with('success', 'Packets updated successfully');
     }
 
     /**
@@ -92,5 +107,27 @@ class ProductController extends Controller
     public function destroy(Product $product)
     {
         $product->delete();
+    }
+
+    /**
+     * Display a public/internal clean selling price catalog.
+     */
+    public function priceList(Request $request)
+    {
+        $dokan = $request->user()->dokans()->first();
+
+        $products = Product::query()
+            ->where('dokan_id', $dokan?->id)
+            ->when($request->input('search'), function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            })
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name', 'description', 'packet_size', 'selling_rate', 'purchased_packets', 'reorder_level']);
+
+        return Inertia::render('product/price-list', [
+            'products' => $products,
+            'filters' => $request->only(['search']),
+        ]);
     }
 }

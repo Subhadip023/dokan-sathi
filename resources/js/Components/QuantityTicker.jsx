@@ -3,45 +3,45 @@ import { router } from '@inertiajs/react'; // Use the direct router
 import debounce from 'lodash/debounce';
 import toast from 'react-hot-toast';
 const QuantityTicker = ({ product }) => {
-    const [localQty, setLocalQty] = useState(product.quantity);
+    const [localPackets, setLocalPackets] = useState(product.purchased_packets);
 
     const debouncedSync = useCallback(
-        debounce((newQty) => {
+        debounce((newPackets) => {
             router.patch(route('products.syncQuantity'), {
                 id: product.id,
-                quantity: newQty
+                purchased_packets: newPackets
             }, {
                 preserveScroll: true,
                 preserveState: true,
-                onSuccess: () => toast.success('Quantity updated successfully'),
-                onError: () => toast.error('Failed to update quantity')
+                onSuccess: () => toast.success('Packets updated successfully'),
+                onError: () => toast.error('Failed to update packets')
             });
 
         }, 500), 
         [product.id] 
     );
 
-    const changeQty = (amount) => {
-        const nextValue = parseInt( Math.max(0, localQty + parseInt(amount)));
-        setLocalQty(nextValue); 
+    const changePackets = (amount) => {
+        const nextValue = parseInt(Math.max(0, localPackets + parseInt(amount)));
+        setLocalPackets(nextValue); 
         debouncedSync(nextValue);
     };
     return (
         <div className="flex items-center space-x-3">
-            {localQty > 0 && (
+            {localPackets > 0 && (
                 <button 
-                    onClick={() => changeQty(-1)}
-                    className="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded shadow-sm font-bold w-8"
+                    onClick={() => changePackets(-1)}
+                    className="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded shadow-sm font-bold w-8 text-gray-700"
                 >-</button>
             )}
             
-            <span className="font-mono font-bold text-lg min-w-[20px] text-center">
-                {parseInt(localQty) || ''}
+            <span className="font-mono font-bold text-lg min-w-[20px] text-center text-gray-900">
+                {parseInt(localPackets) || 0}
             </span>
             
             <button 
-                onClick={() => changeQty(1)}
-                className="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded shadow-sm font-bold w-8"
+                onClick={() => changePackets(1)}
+                className="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded shadow-sm font-bold w-8 text-gray-700"
             >+</button>
         </div>
     );

@@ -9,5 +9,25 @@ class Product extends Model
 {
     /** @use HasFactory<\Database\Factories\ProductFactory> */
     use HasFactory;
-    protected $fillable = ['name', 'description', 'price', 'quantity','reorder_level', 'dokan_id'];
+
+    protected $fillable = [
+        'dokan_id',
+        'name',
+        'description',
+        'reorder_level',
+        'purchased_packets',
+        'packet_size',
+        'cost_rate',
+        'selling_rate',
+    ];
+
+    public function dokan()
+    {
+        return $this->belongsTo(Dokan::class);
+    }
+
+    public function sales()
+    {
+        return $this->hasMany(Sale::class, 'product_id');
+    }
 }

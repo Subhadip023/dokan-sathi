@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('products', function (Blueprint $table) {
+        Schema::create('overhead_costs', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->integer('reorder_level')->default(5);
-            $table->text('description')->nullable();
-            $table->decimal('price', 8, 2);
-            $table->integer('quantity')->default(0);
+            $table->foreignId('dokan_id')->constrained();
+            $table->date('cost_date');
+            $table->string('description');
+            $table->decimal('amount', 10, 2);
             $table->timestamps();
         });
     }
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('products');
+        Schema::dropIfExists('overhead_costs');
     }
 };
