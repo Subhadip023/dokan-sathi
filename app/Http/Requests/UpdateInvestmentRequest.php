@@ -3,17 +3,16 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-
 use Illuminate\Validation\Rule;
 
-class UpdateCoustomerRequest extends FormRequest
+class UpdateInvestmentRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;
+        return !$this->user()->isEmployee();
     }
 
     /**
@@ -26,12 +25,11 @@ class UpdateCoustomerRequest extends FormRequest
         $currentDokanId = $this->user()->currentDokan()?->id;
 
         return [
-            'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:255',
-            'shop_name' => 'nullable|string|max:255',
-            'added_by' => 'nullable|exists:users,id',
-            'edited_by' => 'nullable|exists:users,id',
+            'investor_name' => 'required|string|max:255',
+            'amount' => 'required|numeric|min:0.01',
+            'investment_date' => 'required|date',
+            'payment_method' => 'nullable|string|max:100',
+            'note' => 'nullable|string|max:1000',
             'dokan_id' => [
                 'required',
                 Rule::exists('dokans', 'id')->where(function ($query) use ($currentDokanId) {

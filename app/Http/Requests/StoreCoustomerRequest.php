@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-
 use Illuminate\Validation\Rule;
 
 class StoreCoustomerRequest extends FormRequest
@@ -23,13 +22,19 @@ class StoreCoustomerRequest extends FormRequest
      */
     public function rules(): array
     {
+        $currentDokanId = $this->user()->currentDokan()?->id;
+
         return [
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'shop_name' => 'nullable|string|max:255',
+            'added_by' => 'nullable|exists:users,id',
+            'edited_by' => 'nullable|exists:users,id',
             'dokan_id' => [
                 'required',
-                Rule::exists('dokans', 'id')->where(function ($query) {
-                    return $query->where('owner_id', $this->user()->id);
+                Rule::exists('dokans', 'id')->where(function ($query) use ($currentDokanId) {
+                    return $query->where('id', $currentDokanId);
                 }),
             ],
         ];

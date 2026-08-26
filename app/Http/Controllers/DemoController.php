@@ -13,7 +13,11 @@ class DemoController extends Controller
      */
     public function __invoke(Request $request)
     {
-        $dokan = $request->user()->dokans()->first();
+        $dokan = $request->user()->currentDokan();
+        if (!$dokan) {
+            abort(404, 'No store found.');
+        }
+
         if ($dokan->products()->count() > 0) {
             dd('This is only for no product dokans ');
         }

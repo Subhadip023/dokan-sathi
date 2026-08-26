@@ -12,11 +12,14 @@ import { MdDeleteOutline } from "react-icons/md";
 import QuantityTicker from '@/Components/QuantityTicker';
 import Pagination from '@/Components/Pagination';
 import debounce from 'lodash/debounce';
-export default function Dashboard({ products, summary, filters }) {
+export default function Dashboard({ products, packetSizes = [], summary, filters }) {
     const current_dokan = usePage().props.auth.current_dokan;
+    const user = usePage().props.auth.user;
+    const isOwner = (user?.role ?? 1) === 1;
 
     const [showModal, setShowModal] = useState(false);
     const [search, setSearch] = useState(filters.search || '');
+    const [packetSizeFilter, setPacketSizeFilter] = useState(filters.packet_size || '');
     const [isEdit, setIdEdit] = useState(false);
     const { data, setData, post, errors, put, delete: deleteProduct } = useForm({
         dokan_id: current_dokan?.id,
@@ -30,10 +33,10 @@ export default function Dashboard({ products, summary, filters }) {
     });
 
     const performSearch = useCallback(
-        debounce((query) => {
+        debounce((query, pSize) => {
             router.get(
                 route('products.index'),
-                { search: query },
+                { search: query, packet_size: pSize },
                 { preserveState: true, replace: true }
             );
         }, 500),
@@ -43,7 +46,17 @@ export default function Dashboard({ products, summary, filters }) {
     const handleSearchChange = (e) => {
         const value = e.target.value;
         setSearch(value);
-        performSearch(value);
+        performSearch(value, packetSizeFilter);
+    };
+
+    const handlePacketSizeChange = (e) => {
+        const pSize = e.target.value;
+        setPacketSizeFilter(pSize);
+        router.get(
+            route('products.index'),
+            { search: search, packet_size: pSize },
+            { preserveState: true, replace: true }
+        );
     };
 
     const resetForm = () => {
@@ -154,17 +167,19 @@ export default function Dashboard({ products, summary, filters }) {
                             addClass={'w-full md:w-1/2 md:pl-2'}
                         />
 
-                        <Input
-                            label="Cost Rate (₹)"
-                            name="cost_rate"
-                            id="cost_rate"
-                            type="number"
-                            step="0.01"
-                            value={data.cost_rate}
-                            onChange={(e) => setData('cost_rate', e.target.value)}
-                            error={errors.cost_rate}
-                            addClass={'w-full md:w-1/3 md:pr-2'}
-                        />
+                        {isOwner && (
+                            <Input
+                                label="Cost Rate (₹)"
+                                name="cost_rate"
+                                id="cost_rate"
+                                type="number"
+                                step="0.01"
+                                value={data.cost_rate}
+                                onChange={(e) => setData('cost_rate', e.target.value)}
+                                error={errors.cost_rate}
+                                addClass={'w-full md:w-1/3 md:pr-2'}
+                            />
+                        )}
 
                         <Input
                             label="Selling Rate (₹)"
@@ -175,7 +190,7 @@ export default function Dashboard({ products, summary, filters }) {
                             value={data.selling_rate}
                             onChange={(e) => setData('selling_rate', e.target.value)}
                             error={errors.selling_rate}
-                            addClass={'w-full md:w-1/3 md:px-2'}
+                            addClass={`w-full ${isOwner ? 'md:w-1/3 md:px-2' : 'md:w-1/2 md:pr-2'}`}
                         />
 
                         <Input
@@ -186,7 +201,7 @@ export default function Dashboard({ products, summary, filters }) {
                             value={data.reorder_level}
                             onChange={(e) => setData('reorder_level', e.target.value)}
                             error={errors.reorder_level}
-                            addClass={'w-full md:w-1/3 md:pl-2'}
+                            addClass={`w-full ${isOwner ? 'md:w-1/3 md:pl-2' : 'md:w-1/2 md:pl-2'}`}
                         />
 
                         <div className="w-full">
@@ -226,14 +241,36 @@ export default function Dashboard({ products, summary, filters }) {
                                         <h2 className="text-2xl md:text-3xl font-serif text-gray-900 mb-4 md:m-5 font-bold">
                                             Product List
                                         </h2>
-                                        <div className='flex flex-col md:flex-row items-end justify-between mb-4 md:mb-2 mx-0 md:mx-5 gap-4'>
-                                            <Input
-                                                placeholder='Search...'
-                                                value={search}
-                                                onChange={handleSearchChange}
-                                                addClass={'w-full md:w-1/2'}
-                                            />
-                                            <PrimaryButton onClick={() => { resetForm(); setShowModal(true); setIdEdit(false); }} className='w-full md:w-auto flex items-center justify-center'>
+                                        <div className='flex flex-col md:flex-row items-center justify-between mb-4 md:mb-2 mx-0 md:mx-5 gap-4'>
+                                            <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-2/3">
+                                                <Input
+                                                    placeholder='Search product name or description...'
+                                                    value={search}
+                                                    onChange={handleSearchChange}
+                                                    addClass={'w-full md:w-1/2'}
+                                                />
+                                                <select
+                                                    value={packetSizeFilter}
+                                                    onChange={handlePacketSizeChange}
+                                                    className="w-full md:w-auto border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-xs text-sm py-2 px-3 bg-white text-gray-700 font-medium"
+                                                >
+                                                    <option value="">All Packet Sizes</option>
+                                                    {packetSizes.map((size) => (
+                                                        <option key={size} value={size}>
+                                                            Packet Size: {size} pcs
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                {packetSizeFilter && (
+                                                    <button
+                                                        onClick={() => handlePacketSizeChange({ target: { value: '' } })}
+                                                        className="text-xs text-red-600 hover:text-red-800 font-medium underline"
+                                                    >
+                                                        Clear Filter
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <PrimaryButton onClick={() => { resetForm(); setShowModal(true); setIdEdit(false); }} className='w-full md:w-auto flex items-center justify-center shrink-0'>
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 mr-1">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                                 </svg>
@@ -254,8 +291,10 @@ export default function Dashboard({ products, summary, filters }) {
                                                                 <span className="font-bold text-gray-900 text-lg">{product.name}</span>
                                                             </div>
                                                             <div className="text-right text-sm">
-                                                                <span className="text-gray-500 block text-xs">Selling: ₹{product.selling_rate}</span>
-                                                                <span className="text-gray-500 block text-xs">Cost: ₹{product.cost_rate}</span>
+                                                                <span className="text-emerald-700 font-bold block text-xs">Selling: ₹{product.selling_rate}</span>
+                                                                {isOwner && product.cost_rate !== undefined && product.cost_rate !== null && (
+                                                                    <span className="text-gray-500 block text-xs">Cost: ₹{product.cost_rate}</span>
+                                                                )}
                                                             </div>
                                                         </div>
                                                         <div className="text-sm text-gray-600 mb-3 line-clamp-2">{product.description}</div>
@@ -293,7 +332,7 @@ export default function Dashboard({ products, summary, filters }) {
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Description</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Purchased Packets</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Packet Size</th>
-                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Cost Rate</th>
+                                                            {isOwner && <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Cost Rate</th>}
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Selling Rate</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Reorder Level</th>
                                                             <th className="px-4 py-3 title-font text-center font-medium text-gray-900 text-sm bg-gray-100">Actions</th>
@@ -309,8 +348,8 @@ export default function Dashboard({ products, summary, filters }) {
                                                                     <QuantityTicker product={product} />
                                                                 </td>
                                                                 <td className="px-4 py-3">{product.packet_size}</td>
-                                                                <td className="px-4 py-3">₹{product.cost_rate}</td>
-                                                                <td className="px-4 py-3">₹{product.selling_rate}</td>
+                                                                {isOwner && <td className="px-4 py-3">₹{product.cost_rate}</td>}
+                                                                <td className="px-4 py-3 font-bold text-emerald-700">₹{product.selling_rate}</td>
                                                                 <td className="px-4 py-3">{product.reorder_level}</td>
                                                                 <td className="px-4 py-3 flex items-center justify-center gap-x-2">
                                                                     <button onClick={() => editProduct(product)} className='mr-2 text-blue-600 hover:scale-110 transition-all duration-200 ease-in-out'>
@@ -332,7 +371,11 @@ export default function Dashboard({ products, summary, filters }) {
                                                                     {summary.totalPackets} pkts <span className="text-xs text-gray-500 font-normal">({summary.totalPieces} pcs)</span>
                                                                 </td>
                                                                 <td className="px-4 py-3.5 text-gray-400 font-mono text-xs">-</td>
-                                                                <td className="px-4 py-3.5 text-amber-700 font-mono">₹{summary.totalCostValuation.toLocaleString()}</td>
+                                                                {isOwner && summary.totalCostValuation !== null && summary.totalCostValuation !== undefined ? (
+                                                                    <td className="px-4 py-3.5 text-amber-700 font-mono">₹{summary.totalCostValuation.toLocaleString()}</td>
+                                                                ) : isOwner ? (
+                                                                    <td className="px-4 py-3.5 text-gray-400 font-mono text-xs">-</td>
+                                                                ) : null}
                                                                 <td className="px-4 py-3.5 text-emerald-700 font-mono">₹{summary.totalSellingValuation.toLocaleString()}</td>
                                                                 <td colSpan="2" className="px-4 py-3.5"></td>
                                                             </tr>

@@ -22,14 +22,16 @@ class StoreOverheadCostRequest extends FormRequest
      */
     public function rules(): array
     {
+        $currentDokanId = $this->user()->currentDokan()?->id;
+
         return [
             'cost_date' => 'required|date',
             'description' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0.01',
             'dokan_id' => [
                 'required',
-                Rule::exists('dokans', 'id')->where(function ($query) {
-                    return $query->where('owner_id', $this->user()->id);
+                Rule::exists('dokans', 'id')->where(function ($query) use ($currentDokanId) {
+                    return $query->where('id', $currentDokanId);
                 }),
             ],
         ];

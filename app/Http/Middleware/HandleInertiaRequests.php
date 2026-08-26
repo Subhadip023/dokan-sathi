@@ -36,12 +36,12 @@ class HandleInertiaRequests extends Middleware
                     'id' => $request->user()->id,
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
-                    // Add only the fields you actually use in the Navbar/Sidebar
+                    'role' => $request->user()->role ?? 1,
                 ] : null,
 
                 // Use a closure to prevent unnecessary DB hits on every request
                 'current_dokan' => fn() => $request->user()
-                    ? $request->user()->dokans()->first()
+                    ? $request->user()->currentDokan()?->load('owner')
                     : null,
             ],
             // Flash messages for your Toasts (helpful for your sync-quantity success)

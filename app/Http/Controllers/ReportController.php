@@ -16,7 +16,12 @@ class ReportController extends Controller
      */
     public function pnl(Request $request): Response
     {
-        $dokan = $request->user()->dokans()->first();
+        if ($request->user()->isEmployee()) {
+            abort(403, 'Unauthorized. Store employees cannot view Profit & Loss reports.');
+        }
+
+        $dokan = $request->user()->currentDokan();
+        $dokanId = $dokan?->id;
 
         // Default date range: current month start to end
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
@@ -24,12 +29,12 @@ class ReportController extends Controller
 
         // Fetch Sales in date range
         $sales = Sale::with('product')
-            ->where('dokan_id', $dokan?->id)
+            ->where('dokan_id', $dokanId)
             ->whereBetween('sale_date', [$startDate, $endDate])
             ->get();
 
         // Fetch Overhead Costs in date range
-        $overheadCosts = OverheadCost::where('dokan_id', $dokan?->id)
+        $overheadCosts = OverheadCost::where('dokan_id', $dokanId)
             ->whereBetween('cost_date', [$startDate, $endDate])
             ->get();
 

@@ -7,12 +7,14 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import Modal from '@/Components/Modal';
 import Input from '@/Components/Input';
 import Pagination from '@/Components/Pagination';
-import { FaRegEdit, FaUserPlus, FaPhoneAlt, FaUser } from 'react-icons/fa';
+import { FaRegEdit, FaUserPlus, FaPhoneAlt, FaUser, FaStore, FaEnvelope, FaUserCheck } from 'react-icons/fa';
 import { MdDeleteOutline } from 'react-icons/md';
 import debounce from 'lodash/debounce';
 
 export default function CustomerIndex({ coustomers, filters }) {
     const current_dokan = usePage().props.auth.current_dokan;
+    const user = usePage().props.auth.user;
+    const isOwner = (user?.role ?? 1) === 1;
 
     const [showModal, setShowModal] = useState(false);
     const [search, setSearch] = useState(filters.search || '');
@@ -23,6 +25,8 @@ export default function CustomerIndex({ coustomers, filters }) {
         dokan_id: current_dokan?.id,
         name: '',
         phone: '',
+        email: '',
+        shop_name: '',
     });
 
     const performSearch = useCallback(
@@ -49,6 +53,8 @@ export default function CustomerIndex({ coustomers, filters }) {
             dokan_id: current_dokan?.id,
             name: '',
             phone: '',
+            email: '',
+            shop_name: '',
         });
     };
 
@@ -65,6 +71,8 @@ export default function CustomerIndex({ coustomers, filters }) {
             dokan_id: current_dokan?.id,
             name: customer.name || '',
             phone: customer.phone || '',
+            email: customer.email || '',
+            shop_name: customer.shop_name || '',
         });
         setShowModal(true);
     };
@@ -130,16 +138,42 @@ export default function CustomerIndex({ coustomers, filters }) {
                         />
 
                         <Input
-                            label="Phone Number"
-                            name="phone"
-                            id="phone"
+                            label="Shop Name (Optional)"
+                            name="shop_name"
+                            id="shop_name"
                             type="text"
-                            placeholder="Enter phone number (optional)"
-                            value={data.phone}
-                            onChange={(e) => setData('phone', e.target.value)}
-                            error={errors.phone}
+                            placeholder="Enter customer's shop name"
+                            value={data.shop_name}
+                            onChange={(e) => setData('shop_name', e.target.value)}
+                            error={errors.shop_name}
                             addClass="w-full"
                         />
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Input
+                                label="Phone Number (Optional)"
+                                name="phone"
+                                id="phone"
+                                type="text"
+                                placeholder="Enter phone number"
+                                value={data.phone}
+                                onChange={(e) => setData('phone', e.target.value)}
+                                error={errors.phone}
+                                addClass="w-full"
+                            />
+
+                            <Input
+                                label="Email Address (Optional)"
+                                name="email"
+                                id="email"
+                                type="email"
+                                placeholder="Enter email address"
+                                value={data.email}
+                                onChange={(e) => setData('email', e.target.value)}
+                                error={errors.email}
+                                addClass="w-full"
+                            />
+                        </div>
 
                         <div className="w-full mt-4 flex items-center justify-end gap-x-3">
                             <SecondaryButton
@@ -169,7 +203,7 @@ export default function CustomerIndex({ coustomers, filters }) {
 
                                 <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between mb-6 mx-0 md:mx-5 gap-4">
                                     <Input
-                                        placeholder="Search by name or phone..."
+                                        placeholder="Search by name, shop, phone, or email..."
                                         value={search}
                                         onChange={handleSearchChange}
                                         addClass="w-full md:w-1/2"
@@ -222,35 +256,75 @@ export default function CustomerIndex({ coustomers, filters }) {
                                                                     <span className="font-bold text-gray-900 text-lg block">
                                                                         {customer.name}
                                                                     </span>
-                                                                    <span className="text-xs text-gray-400">
-                                                                        Added: {new Date(customer.created_at).toLocaleDateString()}
-                                                                    </span>
+                                                                    {customer.shop_name && (
+                                                                        <span className="inline-flex items-center text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md mt-0.5">
+                                                                            <FaStore className="mr-1 text-indigo-500" size={10} />
+                                                                            {customer.shop_name}
+                                                                        </span>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </div>
 
-                                                        <div className="flex items-center text-sm text-gray-600 mb-3">
-                                                            <FaPhoneAlt className="mr-2 text-gray-400" size={14} />
-                                                            {customer.phone ? (
-                                                                <span className="font-medium text-gray-800">{customer.phone}</span>
-                                                            ) : (
-                                                                <span className="italic text-gray-400">No phone provided</span>
-                                                            )}
+                                                        <div className="space-y-1.5 text-xs text-gray-600 mb-3 border-t border-b border-gray-100 py-2">
+                                                            <div className="flex items-center">
+                                                                <FaPhoneAlt className="mr-2 text-gray-400" size={12} />
+                                                                {customer.phone ? (
+                                                                    <span className="font-medium text-gray-800 font-mono">{customer.phone}</span>
+                                                                ) : (
+                                                                    <span className="italic text-gray-400">No phone</span>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center">
+                                                                <FaEnvelope className="mr-2 text-gray-400" size={12} />
+                                                                {customer.email ? (
+                                                                    <span className="font-medium text-gray-800">{customer.email}</span>
+                                                                ) : (
+                                                                    <span className="italic text-gray-400">No email</span>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center justify-between text-xs border-t border-gray-100 pt-2 font-mono">
+                                                                <span className="text-emerald-700 font-bold">
+                                                                    Sales: ₹{Number(customer.total_sales_amount || 0).toFixed(2)}
+                                                                </span>
+                                                                {isOwner && customer.total_profit !== null && customer.total_profit !== undefined && (
+                                                                    <span className="text-indigo-600 font-bold">
+                                                                        Profit: ₹{Number(customer.total_profit || 0).toFixed(2)}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-gray-500 pt-1 gap-1">
+                                                                <div className="flex items-center">
+                                                                    <FaUserCheck className="mr-1 text-indigo-500" size={11} />
+                                                                    Added by: <strong className="ml-1 text-gray-700">{customer.added_by ? customer.added_by.name : 'Store Owner'}</strong>
+                                                                </div>
+                                                                {customer.edited_by && (
+                                                                    <div className="flex items-center">
+                                                                        <FaRegEdit className="mr-1 text-amber-600" size={11} />
+                                                                        Edited by: <strong className="ml-1 text-gray-700">{customer.edited_by.name}</strong>
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
 
-                                                        <div className="flex justify-end gap-x-4 pt-3 border-t border-gray-100">
-                                                            <button
-                                                                onClick={() => openEditModal(customer)}
-                                                                className="text-blue-600 hover:text-blue-800 transition-colors flex items-center text-sm font-medium"
-                                                            >
-                                                                <FaRegEdit size={18} className="mr-1" /> Edit
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteCustomer(customer.id, customer.name)}
-                                                                className="text-red-600 hover:text-red-800 transition-colors flex items-center text-sm font-medium"
-                                                            >
-                                                                <MdDeleteOutline size={20} className="mr-1" /> Delete
-                                                            </button>
+                                                        <div className="flex justify-between items-center pt-2">
+                                                            <span className="text-[11px] text-gray-400">
+                                                                {new Date(customer.created_at).toLocaleDateString()}
+                                                            </span>
+                                                            <div className="flex items-center gap-x-3">
+                                                                <button
+                                                                    onClick={() => openEditModal(customer)}
+                                                                    className="text-blue-600 hover:text-blue-800 transition-colors flex items-center text-xs font-semibold"
+                                                                >
+                                                                    <FaRegEdit size={14} className="mr-1" /> Edit
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteCustomer(customer.id, customer.name)}
+                                                                    className="text-red-600 hover:text-red-800 transition-colors flex items-center text-xs font-semibold"
+                                                                >
+                                                                    <MdDeleteOutline size={16} className="mr-1" /> Delete
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 ))}
@@ -262,8 +336,13 @@ export default function CustomerIndex({ coustomers, filters }) {
                                                     <thead>
                                                         <tr>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 w-12">#</th>
-                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Name</th>
+                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Customer & Shop Name</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Phone</th>
+                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Email</th>
+                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Total Sales (₹)</th>
+                                                            {isOwner && <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Total Profit (₹)</th>}
+                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Added By</th>
+                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Last Edited By</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Date Added</th>
                                                             <th className="px-4 py-3 title-font text-center font-medium text-gray-900 text-sm bg-gray-100 w-28">Actions</th>
                                                         </tr>
@@ -272,23 +351,69 @@ export default function CustomerIndex({ coustomers, filters }) {
                                                         {coustomers.data.map((customer, index) => (
                                                             <tr key={customer.id} className="border-b bg-white hover:bg-gray-50 transition-colors">
                                                                 <td className="px-4 py-3 text-gray-500 font-mono text-sm">{index + 1}</td>
-                                                                <td className="px-4 py-3 font-semibold text-gray-900 flex items-center">
-                                                                    <div className="h-8 w-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm mr-3 border border-indigo-100">
-                                                                        {customer.name ? customer.name.charAt(0).toUpperCase() : 'C'}
+                                                                <td className="px-4 py-3 font-semibold text-gray-900">
+                                                                    <div className="flex items-center">
+                                                                        <div className="h-9 w-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm mr-3 border border-indigo-100 shrink-0">
+                                                                            {customer.name ? customer.name.charAt(0).toUpperCase() : 'C'}
+                                                                        </div>
+                                                                        <div>
+                                                                            <span className="block text-sm font-bold text-gray-900">{customer.name}</span>
+                                                                            {customer.shop_name ? (
+                                                                                <span className="inline-flex items-center text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded mt-0.5">
+                                                                                    <FaStore className="mr-1 text-indigo-500" size={10} />
+                                                                                    {customer.shop_name}
+                                                                                </span>
+                                                                            ) : (
+                                                                                <span className="text-[11px] text-gray-400 italic">No shop name</span>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
-                                                                    {customer.name}
                                                                 </td>
                                                                 <td className="px-4 py-3 text-gray-700">
                                                                     {customer.phone ? (
-                                                                        <span className="inline-flex items-center font-mono">
+                                                                        <span className="inline-flex items-center font-mono text-xs">
                                                                             <FaPhoneAlt className="mr-1.5 text-gray-400" size={12} />
                                                                             {customer.phone}
                                                                         </span>
                                                                     ) : (
-                                                                        <span className="text-gray-400 italic text-sm">N/A</span>
+                                                                        <span className="text-gray-400 italic text-xs">N/A</span>
                                                                     )}
                                                                 </td>
-                                                                <td className="px-4 py-3 text-gray-500 text-sm">
+                                                                <td className="px-4 py-3 text-gray-700 text-xs">
+                                                                    {customer.email ? (
+                                                                        <span className="inline-flex items-center">
+                                                                            <FaEnvelope className="mr-1.5 text-gray-400" size={12} />
+                                                                            {customer.email}
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="text-gray-400 italic text-xs">N/A</span>
+                                                                    )}
+                                                                </td>
+                                                                <td className="px-4 py-3 font-mono font-extrabold text-emerald-700 text-xs">
+                                                                    ₹{Number(customer.total_sales_amount || 0).toFixed(2)}
+                                                                </td>
+                                                                {isOwner && (
+                                                                    <td className="px-4 py-3 font-mono font-bold text-indigo-600 text-xs">
+                                                                        ₹{Number(customer.total_profit || 0).toFixed(2)}
+                                                                    </td>
+                                                                )}
+                                                                <td className="px-4 py-3 text-gray-700 text-xs">
+                                                                    <span className="inline-flex items-center font-medium bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs">
+                                                                        <FaUserCheck className="mr-1.5 text-indigo-500" size={11} />
+                                                                        {customer.added_by ? customer.added_by.name : 'Store Owner'}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-4 py-3 text-gray-700 text-xs">
+                                                                    {customer.edited_by ? (
+                                                                        <span className="inline-flex items-center font-medium bg-amber-50 text-amber-800 px-2.5 py-1 rounded-full text-xs border border-amber-200">
+                                                                            <FaRegEdit className="mr-1.5 text-amber-600" size={11} />
+                                                                            {customer.edited_by.name}
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="text-gray-400 italic text-xs">N/A</span>
+                                                                    )}
+                                                                </td>
+                                                                <td className="px-4 py-3 text-gray-500 text-xs font-mono">
                                                                     {new Date(customer.created_at).toLocaleDateString()}
                                                                 </td>
                                                                 <td className="px-4 py-3 text-center">

@@ -12,10 +12,38 @@ class Dokan extends Model
     
     protected $fillable = [
         'name',
+        'slug',
         'description',
         'location',
+        'phone',
+        'email',
+        'logo',
         'owner_id',
     ];
+
+    protected $appends = ['logo_url'];
+
+    public function getLogoUrlAttribute()
+    {
+        return $this->logo ? asset('storage/' . $this->logo) : null;
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($dokan) {
+            if (empty($dokan->slug)) {
+                $baseSlug = \Illuminate\Support\Str::slug($dokan->name) ?: 'dokan';
+                $slug = $baseSlug;
+                $count = 1;
+                while (static::where('slug', $slug)->exists()) {
+                    $slug = $baseSlug . '-' . $count++;
+                }
+                $dokan->slug = $slug;
+            }
+        });
+    }
 
     public function owner()
     {
@@ -31,5 +59,9 @@ class Dokan extends Model
 
     public function sales(){
         return $this->hasMany(Sale::class, 'dokan_id');
+    }
+
+    public function staff(){
+        return $this->hasMany(User::class, 'dokan_id');
     }
 }

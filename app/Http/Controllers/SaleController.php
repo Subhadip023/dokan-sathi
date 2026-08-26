@@ -19,10 +19,11 @@ class SaleController extends Controller
      */
     public function index(Request $request): Response
     {
-        $dokan = $request->user()->dokans()->first();
+        $dokan = $request->user()->currentDokan();
+        $dokanId = $dokan?->id;
 
         $query = Sale::with(['product', 'customer'])
-            ->where('dokan_id', $dokan?->id);
+            ->where('dokan_id', $dokanId);
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -92,20 +93,35 @@ class SaleController extends Controller
             ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(), 'query' => $request->query()]
         );
 
+        $user = $request->user();
+        $isEmployee = $user->isEmployee();
+
         // Summary Calculations for Dokan
-        $allSales = Sale::where('dokan_id', $dokan?->id)->get();
+        $allSales = Sale::where('dokan_id', $dokanId)->get();
         $totalRevenue = $allSales->sum(fn($s) => $s->total_amount);
-        $totalProfit = $allSales->sum(fn($s) => $s->profit);
+        $totalProfit = $isEmployee ? null : $allSales->sum(fn($s) => $s->profit);
         $totalInvoices = $invoices->count();
 
-        $products = Product::where('dokan_id', $dokan?->id)->get(['id', 'name', 'selling_rate', 'cost_rate', 'packet_size', 'purchased_packets']);
-        $customers = Coustomer::where('dokan_id', $dokan?->id)->get(['id', 'name', 'phone']);
+        if ($isEmployee) {
+            $paginatedInvoices->getCollection()->transform(function ($inv) {
+                unset($inv['total_profit']);
+                if (isset($inv['items'])) {
+                    foreach ($inv['items'] as &$item) {
+                        unset($item['profit'], $item['cost_rate']);
+                    }
+                }
+                return $inv;
+            });
+        }
+
+        $products = Product::where('dokan_id', $dokanId)->get(['id', 'name', 'selling_rate', 'cost_rate', 'packet_size', 'purchased_packets']);
+        $customers = Coustomer::where('dokan_id', $dokanId)->get(['id', 'name', 'phone']);
 
         return Inertia::render('sale/index', [
             'invoices' => $paginatedInvoices,
             'summary' => [
                 'totalRevenue' => round($totalRevenue, 2),
-                'totalProfit' => round($totalProfit, 2),
+                'totalProfit' => $isEmployee ? null : round($totalProfit, 2),
                 'totalInvoices' => $totalInvoices,
             ],
             'products' => $products,
@@ -119,9 +135,11 @@ class SaleController extends Controller
      */
     public function create(Request $request): Response
     {
-        $dokan = $request->user()->dokans()->first();
-        $products = Product::where('dokan_id', $dokan?->id)->get(['id', 'name', 'selling_rate', 'cost_rate', 'packet_size', 'purchased_packets']);
-        $customers = Coustomer::where('dokan_id', $dokan?->id)->get(['id', 'name', 'phone']);
+        $dokan = $request->user()->currentDokan();
+        $dokanId = $dokan?->id;
+
+        $products = Product::where('dokan_id', $dokanId)->get(['id', 'name', 'selling_rate', 'cost_rate', 'packet_size', 'purchased_packets']);
+        $customers = Coustomer::where('dokan_id', $dokanId)->get(['id', 'name', 'phone']);
 
         return Inertia::render('sale/create', [
             'products' => $products,
@@ -134,7 +152,10 @@ class SaleController extends Controller
      */
     public function store(StoreSaleRequest $request)
     {
-        $dokan = $request->user()->dokans()->first();
+        $dokan = $request->user()->currentDokan();
+        if (!$dokan) {
+            abort(404, 'No store found.');
+        }
 
         DB::transaction(function () use ($request, $dokan) {
             $numItems = count($request->items);
@@ -143,7 +164,7 @@ class SaleController extends Controller
                 : 0;
 
             foreach ($request->items as $item) {
-                $product = Product::where('dokan_id', $dokan?->id)->lockForUpdate()->findOrFail($item['product_id']);
+                $product = Product::where('dokan_id', $dokan->id)->lockForUpdate()->findOrFail($item['product_id']);
                 $totalItemDiscount = (floatval($item['discount'] ?? 0)) + $extraDiscountPerItem;
 
                 Sale::create([
@@ -174,20 +195,20 @@ class SaleController extends Controller
      */
     public function update(UpdateSaleRequest $request, Sale $sale)
     {
-        $dokan = $request->user()->dokans()->first();
-        if ($sale->dokan_id !== $dokan?->id) {
+        $dokan = $request->user()->currentDokan();
+        if (!$dokan || $sale->dokan_id !== $dokan->id) {
             abort(403);
         }
 
         DB::transaction(function () use ($request, $sale, $dokan) {
             // Restore previous product stock
-            $oldProduct = Product::where('dokan_id', $dokan?->id)->lockForUpdate()->find($sale->product_id);
+            $oldProduct = Product::where('dokan_id', $dokan->id)->lockForUpdate()->find($sale->product_id);
             if ($oldProduct) {
                 $oldProduct->increment('purchased_packets', $sale->qty);
             }
 
             // Deduct new product stock
-            $newProduct = Product::where('dokan_id', $dokan?->id)->lockForUpdate()->findOrFail($request->product_id);
+            $newProduct = Product::where('dokan_id', $dokan->id)->lockForUpdate()->findOrFail($request->product_id);
             $newProduct->decrement('purchased_packets', $request->qty);
 
             $sale->update([
@@ -210,21 +231,21 @@ class SaleController extends Controller
      */
     public function destroy(Request $request, Sale $sale)
     {
-        $dokan = $request->user()->dokans()->first();
-        if ($sale->dokan_id !== $dokan?->id) {
+        $dokan = $request->user()->currentDokan();
+        if (!$dokan || $sale->dokan_id !== $dokan->id) {
             abort(403);
         }
 
         DB::transaction(function () use ($request, $sale, $dokan) {
             $saleIds = $request->input('sale_ids');
             if (is_array($saleIds) && count($saleIds) > 0) {
-                $salesToDelete = Sale::where('dokan_id', $dokan?->id)->whereIn('id', $saleIds)->get();
+                $salesToDelete = Sale::where('dokan_id', $dokan->id)->whereIn('id', $saleIds)->get();
             } else {
                 $salesToDelete = collect([$sale]);
             }
 
             foreach ($salesToDelete as $item) {
-                $product = Product::where('dokan_id', $dokan?->id)->lockForUpdate()->find($item->product_id);
+                $product = Product::where('dokan_id', $dokan->id)->lockForUpdate()->find($item->product_id);
                 if ($product) {
                     $product->increment('purchased_packets', $item->qty);
                 }

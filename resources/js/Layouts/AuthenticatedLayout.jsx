@@ -12,17 +12,20 @@ import {
     FaReceipt,
     FaChartLine,
     FaStore,
+    FaUserTie,
     FaUserCircle,
     FaSignOutAlt,
     FaBars,
     FaTimes,
-    FaChevronRight
+    FaChevronRight,
+    FaHandHoldingUsd
 } from 'react-icons/fa';
 
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
     const current_dokan = usePage().props.auth.current_dokan;
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const isOwner = (user?.role ?? 1) === 1;
 
     const navItems = [
         {
@@ -62,10 +65,32 @@ export default function AuthenticatedLayout({ header, children }) {
             icon: FaReceipt,
         },
         {
+            name: 'Investments',
+            href: route('investments.index'),
+            active: route().current('investments.*'),
+            icon: FaHandHoldingUsd,
+            ownerOnly: true,
+        },
+        {
+            name: 'Staff',
+            href: route('staff.index'),
+            active: route().current('staff.*'),
+            icon: FaUserTie,
+            ownerOnly: true,
+        },
+        {
             name: 'P&L Report',
             href: route('reports.pnl'),
             active: route().current('reports.pnl'),
             icon: FaChartLine,
+            ownerOnly: true,
+        },
+        {
+            name: 'Store Settings',
+            href: route('dokan.edit'),
+            active: route().current('dokan.edit'),
+            icon: FaStore,
+            ownerOnly: true,
         },
     ];
 
@@ -144,7 +169,9 @@ export default function AuthenticatedLayout({ header, children }) {
 
                     {/* Navigation Links List */}
                     <nav className="mt-4 px-3 space-y-1 overflow-y-auto max-h-[calc(100vh-230px)]">
-                        {navItems.map((item) => {
+                        {navItems
+                            .filter((item) => !item.ownerOnly || isOwner)
+                            .map((item) => {
                             const Icon = item.icon;
                             return (
                                 <Link

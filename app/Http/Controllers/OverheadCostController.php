@@ -16,9 +16,10 @@ class OverheadCostController extends Controller
      */
     public function index(Request $request): Response
     {
-        $dokan = $request->user()->dokans()->first();
+        $dokan = $request->user()->currentDokan();
+        $dokanId = $dokan?->id;
 
-        $query = OverheadCost::where('dokan_id', $dokan?->id);
+        $query = OverheadCost::where('dokan_id', $dokanId);
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -33,7 +34,7 @@ class OverheadCostController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        $allCosts = OverheadCost::where('dokan_id', $dokan?->id)->get();
+        $allCosts = OverheadCost::where('dokan_id', $dokanId)->get();
         $totalOverheadCost = $allCosts->sum('amount');
         $totalCount = $allCosts->count();
 
@@ -52,7 +53,10 @@ class OverheadCostController extends Controller
      */
     public function store(StoreOverheadCostRequest $request)
     {
-        $dokan = $request->user()->dokans()->first();
+        $dokan = $request->user()->currentDokan();
+        if (!$dokan) {
+            abort(404, 'No store found.');
+        }
 
         OverheadCost::create([
             'dokan_id' => $dokan->id,
@@ -69,8 +73,8 @@ class OverheadCostController extends Controller
      */
     public function update(UpdateOverheadCostRequest $request, OverheadCost $overheadCost)
     {
-        $dokan = $request->user()->dokans()->first();
-        if ($overheadCost->dokan_id !== $dokan?->id) {
+        $dokan = $request->user()->currentDokan();
+        if (!$dokan || $overheadCost->dokan_id !== $dokan->id) {
             abort(403);
         }
 
@@ -88,8 +92,8 @@ class OverheadCostController extends Controller
      */
     public function destroy(Request $request, OverheadCost $overheadCost)
     {
-        $dokan = $request->user()->dokans()->first();
-        if ($overheadCost->dokan_id !== $dokan?->id) {
+        $dokan = $request->user()->currentDokan();
+        if (!$dokan || $overheadCost->dokan_id !== $dokan->id) {
             abort(403);
         }
 

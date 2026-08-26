@@ -16,18 +16,32 @@ class CoustomerController extends Controller
      */
     public function index(Request $request): Response
     {
-        $dokan = $request->user()->dokans()->first();
+        $user = $request->user();
+        $isEmployee = $user->isEmployee();
+        $dokan = $user->currentDokan();
+        $dokanId = $dokan?->id;
 
-        $coustomers = Coustomer::where('dokan_id', $dokan?->id)
+        $coustomers = Coustomer::with(['addedBy:id,name', 'editedBy:id,name', 'sales'])
+            ->where('dokan_id', $dokanId)
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('phone', 'like', "%{$search}%");
+                      ->orWhere('phone', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('shop_name', 'like', "%{$search}%");
                 });
             })
             ->oldest()
             ->paginate(15)
             ->withQueryString();
+
+        $coustomers->getCollection()->transform(function ($customer) use ($isEmployee) {
+            $sales = $customer->sales;
+            $customer->total_sales_amount = round($sales->sum(fn($s) => $s->total_amount), 2);
+            $customer->total_profit = $isEmployee ? null : round($sales->sum(fn($s) => $s->profit), 2);
+            unset($customer->sales);
+            return $customer;
+        });
 
         return Inertia::render('coustomer/index', [
             'coustomers' => $coustomers,
@@ -40,7 +54,11 @@ class CoustomerController extends Controller
      */
     public function store(StoreCoustomerRequest $request)
     {
-        Coustomer::create($request->validated());
+        $data = $request->validated();
+        $data['added_by'] = $request->user()->id;
+        $data['edited_by'] = $request->user()->id;
+
+        Coustomer::create($data);
 
         return redirect()->route('coustomers.index')->with('success', 'Customer added successfully.');
     }
@@ -50,12 +68,15 @@ class CoustomerController extends Controller
      */
     public function update(UpdateCoustomerRequest $request, Coustomer $coustomer)
     {
-        $dokan = $request->user()->dokans()->first();
-        if ($coustomer->dokan_id !== $dokan?->id) {
+        $dokan = $request->user()->currentDokan();
+        if (!$dokan || $coustomer->dokan_id !== $dokan->id) {
             abort(403);
         }
 
-        $coustomer->update($request->validated());
+        $data = $request->validated();
+        $data['edited_by'] = $request->user()->id;
+
+        $coustomer->update($data);
 
         return redirect()->route('coustomers.index')->with('success', 'Customer updated successfully.');
     }
@@ -65,8 +86,8 @@ class CoustomerController extends Controller
      */
     public function destroy(Request $request, Coustomer $coustomer)
     {
-        $dokan = $request->user()->dokans()->first();
-        if ($coustomer->dokan_id !== $dokan?->id) {
+        $dokan = $request->user()->currentDokan();
+        if (!$dokan || $coustomer->dokan_id !== $dokan->id) {
             abort(403);
         }
 

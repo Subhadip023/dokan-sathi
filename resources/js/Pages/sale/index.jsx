@@ -13,6 +13,8 @@ import debounce from 'lodash/debounce';
 
 export default function SaleIndex({ invoices, summary, products, customers, filters }) {
     const current_dokan = usePage().props.auth.current_dokan;
+    const user = usePage().props.auth.user;
+    const isOwner = (user?.role ?? 1) === 1;
 
     const [search, setSearch] = useState(filters.search || '');
     const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -160,7 +162,7 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
 
             <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 py-6">
                 {/* Stats Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className={`grid grid-cols-1 ${isOwner ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4 mb-6`}>
                     <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
                         <div>
                             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Sales Revenue</p>
@@ -171,15 +173,17 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
                         </div>
                     </div>
 
-                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
-                        <div>
-                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Sales Profit</p>
-                            <h3 className="text-2xl font-bold text-indigo-700 mt-1">₹{summary.totalProfit.toLocaleString()}</h3>
+                    {isOwner && summary.totalProfit !== null && summary.totalProfit !== undefined && (
+                        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Sales Profit</p>
+                                <h3 className="text-2xl font-bold text-indigo-700 mt-1">₹{summary.totalProfit.toLocaleString()}</h3>
+                            </div>
+                            <div className="h-12 w-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl">
+                                <FaChartLine />
+                            </div>
                         </div>
-                        <div className="h-12 w-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl">
-                            <FaChartLine />
-                        </div>
-                    </div>
+                    )}
 
                     <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
                         <div>
@@ -251,7 +255,7 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
                                                 <th className="py-3 px-4">Purchased Products</th>
                                                 <th className="py-3 px-4 text-center">Packets</th>
                                                 <th className="py-3 px-4 text-right">Invoice Total (₹)</th>
-                                                <th className="py-3 px-4 text-right">Profit (₹)</th>
+                                                {isOwner && <th className="py-3 px-4 text-right">Profit (₹)</th>}
                                                 <th className="py-3 px-4 text-center w-28">Actions</th>
                                             </tr>
                                         </thead>
@@ -310,9 +314,11 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
                                                             <td className="py-3.5 px-4 text-right font-mono font-extrabold text-emerald-700">
                                                                 ₹{inv.total_amount.toFixed(2)}
                                                             </td>
-                                                            <td className="py-3.5 px-4 text-right font-mono font-bold text-indigo-600">
-                                                                ₹{inv.total_profit.toFixed(2)}
-                                                            </td>
+                                                            {isOwner && (
+                                                                <td className="py-3.5 px-4 text-right font-mono font-bold text-indigo-600">
+                                                                    ₹{inv.total_profit?.toFixed(2) ?? '0.00'}
+                                                                </td>
+                                                            )}
                                                             <td className="py-3.5 px-4 text-center">
                                                                 <div className="flex items-center justify-center space-x-2">
                                                                     <button
@@ -338,7 +344,7 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
                                                         {/* Expanded Inline Items Table */}
                                                         {isExpanded && (
                                                             <tr className="bg-indigo-50/40">
-                                                                <td colSpan="8" className="p-4">
+                                                                <td colSpan={isOwner ? "8" : "7"} className="p-4">
                                                                     <div className="bg-white rounded-lg border border-indigo-100 p-3 shadow-inner">
                                                                         <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-2">
                                                                             Invoice Product Breakdown

@@ -5,19 +5,24 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Coustomer extends Model
+class Investment extends Model
 {
-    /** @use HasFactory<\Database\Factories\CoustomerFactory> */
     use HasFactory;
 
     protected $fillable = [
         'dokan_id',
-        'name',
-        'phone',
-        'email',
-        'shop_name',
+        'investor_name',
+        'amount',
+        'investment_date',
+        'payment_method',
+        'note',
         'added_by',
         'edited_by',
+    ];
+
+    protected $casts = [
+        'investment_date' => 'date',
+        'amount' => 'decimal:2',
     ];
 
     public function dokan()
@@ -33,10 +38,5 @@ class Coustomer extends Model
     public function editedBy()
     {
         return $this->belongsTo(User::class, 'edited_by');
-    }
-
-    public function sales()
-    {
-        return $this->hasMany(Sale::class, 'customer_id');
     }
 }

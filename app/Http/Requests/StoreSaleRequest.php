@@ -22,6 +22,8 @@ class StoreSaleRequest extends FormRequest
      */
     public function rules(): array
     {
+        $currentDokanId = $this->user()->currentDokan()?->id;
+
         return [
             'sale_date' => 'required|date',
             'customer_id' => [
@@ -42,8 +44,8 @@ class StoreSaleRequest extends FormRequest
             'order_discount' => 'nullable|numeric|min:0',
             'dokan_id' => [
                 'required',
-                Rule::exists('dokans', 'id')->where(function ($query) {
-                    return $query->where('owner_id', $this->user()->id);
+                Rule::exists('dokans', 'id')->where(function ($query) use ($currentDokanId) {
+                    return $query->where('id', $currentDokanId);
                 }),
             ],
         ];
