@@ -23,6 +23,7 @@ class RegistrationTest extends TestCase
             'email' => 'test@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'dokan_name' => 'Test Dokan',
         ]);
 
         $this->assertAuthenticated();

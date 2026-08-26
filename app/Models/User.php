@@ -66,7 +66,7 @@ class User extends Authenticatable
     public function currentDokan()
     {
         if ($this->isOwner()) {
-            return $this->dokans()->first();
+            return $this->dokans()->first() ?? $this->dokan;
         }
         return $this->dokan;
     }
