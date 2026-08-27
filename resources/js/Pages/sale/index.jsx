@@ -7,11 +7,11 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import Modal from '@/Components/Modal';
 import Input from '@/Components/Input';
 import Pagination from '@/Components/Pagination';
-import { FaShoppingCart, FaCalendarAlt, FaUser, FaBoxOpen, FaChartLine, FaRupeeSign, FaPlus, FaEye, FaChevronDown, FaChevronUp, FaReceipt } from 'react-icons/fa';
+import { FaShoppingCart, FaCalendarAlt, FaUser, FaBoxOpen, FaChartLine, FaRupeeSign, FaPlus, FaEye, FaChevronDown, FaChevronUp, FaReceipt, FaMoneyBillWave, FaEdit } from 'react-icons/fa';
 import { MdDeleteOutline } from 'react-icons/md';
 import debounce from 'lodash/debounce';
 
-export default function SaleIndex({ invoices, summary, products, customers, filters }) {
+export default function SaleIndex({ invoices, summary, products, customers, filters, isDueOnly = false }) {
     const current_dokan = usePage().props.auth.current_dokan;
     const user = usePage().props.auth.user;
     const isOwner = (user?.role ?? 1) === 1;
@@ -19,19 +19,24 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
     const [search, setSearch] = useState(filters.search || '');
     const [selectedInvoice, setSelectedInvoice] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [expandedInvoiceId, setExpandedInvoiceId] = useState(null);
 
-    const { delete: deleteSale } = useForm();
+    const paymentForm = useForm({
+        sale_ids: [],
+        payment_status: 'full_paid',
+        paid_amount: '',
+    });
 
     const performSearch = useCallback(
         debounce((query) => {
             router.get(
-                route('sales.index'),
+                isDueOnly ? route('sales.due') : route('sales.index'),
                 { search: query },
                 { preserveState: true, replace: true }
             );
         }, 500),
-        []
+        [isDueOnly]
     );
 
     const handleSearchChange = (e) => {
@@ -47,6 +52,30 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
     const openInvoiceDetails = (inv) => {
         setSelectedInvoice(inv);
         setShowDetailModal(true);
+    };
+
+    const openPaymentModal = (inv) => {
+        setSelectedInvoice(inv);
+        paymentForm.setData({
+            sale_ids: inv.sale_ids,
+            payment_status: inv.payment_status || 'full_paid',
+            paid_amount: inv.paid_amount || '',
+        });
+        setShowPaymentModal(true);
+    };
+
+    const handleUpdatePaymentStatus = (e) => {
+        e.preventDefault();
+        paymentForm.patch(route('sales.payment-status'), {
+            onSuccess: () => {
+                toast.success('Payment status updated successfully!');
+                setShowPaymentModal(false);
+                if (showDetailModal) setShowDetailModal(false);
+            },
+            onError: () => {
+                toast.error('Failed to update payment status');
+            }
+        });
     };
 
     const handleDeleteInvoice = (inv) => {
@@ -66,9 +95,116 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
         });
     };
 
+    const renderPaymentBadge = (status, paid, due) => {
+        if (status === 'full_paid') {
+            return (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                    Full Paid
+                </span>
+            );
+        } else if (status === 'partially_paid') {
+            return (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800" title={`Paid: ₹${paid} | Due: ₹${due}`}>
+                    Partial (Due: ₹{due})
+                </span>
+            );
+        } else {
+            return (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800" title={`Due: ₹${due}`}>
+                    Credit (Due: ₹{due})
+                </span>
+            );
+        }
+    };
+
     return (
-        <AuthenticatedLayout header="Sales History">
-            <Head title="Sales History" />
+        <AuthenticatedLayout header={isDueOnly ? "Due Invoices" : "Sales History"}>
+            <Head title={isDueOnly ? "Due Invoices" : "Sales History"} />
+
+            {/* Modal for Payment Status Update */}
+            <Modal show={showPaymentModal} onClose={() => setShowPaymentModal(false)} maxWidth="md">
+                {selectedInvoice && (
+                    <form onSubmit={handleUpdatePaymentStatus} className="p-6 text-gray-900">
+                        <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center">
+                            <FaMoneyBillWave className="mr-2 text-indigo-600" /> Update Payment Status
+                        </h2>
+                        <p className="text-xs text-gray-500 mb-4 border-b pb-3">
+                            Invoice Total: <strong className="font-mono text-gray-900">₹{selectedInvoice.total_amount}</strong> • Customer: {selectedInvoice.customer ? selectedInvoice.customer.name : 'Walk-in'}
+                        </p>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                                    Status
+                                </label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => paymentForm.setData('payment_status', 'full_paid')}
+                                        className={`py-2 px-3 rounded-lg text-xs font-bold border transition-colors ${paymentForm.data.payment_status === 'full_paid' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-gray-50 text-gray-700 border-gray-200'}`}
+                                    >
+                                        Full Paid
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => paymentForm.setData('payment_status', 'partially_paid')}
+                                        className={`py-2 px-3 rounded-lg text-xs font-bold border transition-colors ${paymentForm.data.payment_status === 'partially_paid' ? 'bg-amber-500 text-white border-amber-500' : 'bg-gray-50 text-gray-700 border-gray-200'}`}
+                                    >
+                                        Partial
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => paymentForm.setData('payment_status', 'credit')}
+                                        className={`py-2 px-3 rounded-lg text-xs font-bold border transition-colors ${paymentForm.data.payment_status === 'credit' ? 'bg-red-600 text-white border-red-600' : 'bg-gray-50 text-gray-700 border-gray-200'}`}
+                                    >
+                                        Credit
+                                    </button>
+                                </div>
+                            </div>
+
+                            {paymentForm.data.payment_status === 'partially_paid' && (
+                                <div className="bg-amber-50 p-3 rounded-lg border border-amber-200 space-y-2">
+                                    <label htmlFor="modal_paid_amount" className="block text-xs font-bold text-amber-900">
+                                        Amount Collected Now (₹)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="modal_paid_amount"
+                                        step="0.01"
+                                        min="0"
+                                        max={selectedInvoice.total_amount}
+                                        className="w-full border-amber-300 rounded-md text-sm font-mono"
+                                        value={paymentForm.data.paid_amount}
+                                        onChange={(e) => paymentForm.setData('paid_amount', e.target.value)}
+                                        required
+                                    />
+                                    <p className="text-[11px] text-amber-800 font-medium">
+                                        Remaining Due Balance: <strong className="font-mono text-red-600">₹{(selectedInvoice.total_amount - (parseFloat(paymentForm.data.paid_amount) || 0)).toFixed(2)}</strong>
+                                    </p>
+                                </div>
+                            )}
+
+                            {paymentForm.data.payment_status === 'credit' && (
+                                <div className="bg-red-50 p-3 rounded-lg border border-red-200 text-xs text-red-900 flex justify-between items-center">
+                                    <span>Remaining Credit Balance:</span>
+                                    <span className="font-mono font-bold text-red-700 text-sm">
+                                        ₹{selectedInvoice.total_amount.toFixed(2)}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex justify-end space-x-2 mt-6 pt-3 border-t">
+                            <SecondaryButton onClick={() => setShowPaymentModal(false)}>
+                                Cancel
+                            </SecondaryButton>
+                            <PrimaryButton type="submit" disabled={paymentForm.processing} className="bg-indigo-600 hover:bg-indigo-700">
+                                Save Payment Status
+                            </PrimaryButton>
+                        </div>
+                    </form>
+                )}
+            </Modal>
 
             {/* Modal for Invoice Detailed View */}
             <Modal show={showDetailModal} onClose={() => setShowDetailModal(false)} maxWidth="2xl">
@@ -83,9 +219,17 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
                                     {selectedInvoice.sale_date} • {selectedInvoice.customer ? selectedInvoice.customer.name : 'Walk-in / Cash Customer'}
                                 </p>
                             </div>
-                            <span className="text-xs bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-bold">
-                                Total: ₹{selectedInvoice.total_amount}
-                            </span>
+                            <div className="flex items-center space-x-2">
+                                {renderPaymentBadge(selectedInvoice.payment_status, selectedInvoice.paid_amount, selectedInvoice.due_amount)}
+                                <button
+                                    type="button"
+                                    onClick={() => openPaymentModal(selectedInvoice)}
+                                    className="p-1.5 rounded-md bg-indigo-50 text-indigo-600 hover:bg-indigo-100 text-xs font-semibold flex items-center"
+                                    title="Edit Payment Status"
+                                >
+                                    <FaEdit size={12} className="mr-1" /> Edit
+                                </button>
+                            </div>
                         </div>
 
                         {/* Customer Info Card */}
@@ -135,23 +279,42 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
                             </table>
                         </div>
 
-                        {/* Financial Totals */}
-                        <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200 flex justify-between items-center mb-6">
-                            <div>
-                                <span className="text-xs font-bold text-emerald-900 uppercase tracking-wider block">Grand Total Paid</span>
-                                <span className="text-xs text-emerald-700">Includes all item discounts</span>
+                        {/* Financial Totals & Payment Summary */}
+                        <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200 mb-6 space-y-2">
+                            <div className="flex justify-between items-center">
+                                <span className="text-xs font-bold text-emerald-900 uppercase tracking-wider block">Grand Total Invoice</span>
+                                <span className="text-2xl font-extrabold text-emerald-700 font-mono">₹{selectedInvoice.total_amount}</span>
                             </div>
-                            <span className="text-2xl font-extrabold text-emerald-700 font-mono">₹{selectedInvoice.total_amount}</span>
+                            <div className="flex justify-between items-center text-xs border-t border-emerald-200/60 pt-2 text-gray-700 font-medium">
+                                <span>Amount Collected (Paid):</span>
+                                <span className="font-mono font-bold text-emerald-800">₹{selectedInvoice.paid_amount}</span>
+                            </div>
+                            {selectedInvoice.due_amount > 0 && (
+                                <div className="flex justify-between items-center text-xs text-red-700 font-bold">
+                                    <span>Remaining Credit (Due):</span>
+                                    <span className="font-mono text-sm">₹{selectedInvoice.due_amount}</span>
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex justify-between items-center pt-2 border-t">
-                            <button
-                                type="button"
-                                onClick={() => handleDeleteInvoice(selectedInvoice)}
-                                className="text-red-600 hover:text-red-800 text-xs font-semibold flex items-center px-3 py-2 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
-                            >
-                                <MdDeleteOutline size={16} className="mr-1" /> Delete Entire Invoice
-                            </button>
+                            <div className="flex items-center space-x-2">
+                                <a
+                                    href={route('sales.invoice.pdf', { sale_ids: selectedInvoice.sale_ids.join(',') })}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-indigo-600 hover:text-indigo-800 text-xs font-semibold flex items-center px-3 py-2 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors"
+                                >
+                                    <FaReceipt size={14} className="mr-1.5" /> Download PDF Invoice
+                                </a>
+                                <button
+                                    type="button"
+                                    onClick={() => handleDeleteInvoice(selectedInvoice)}
+                                    className="text-red-600 hover:text-red-800 text-xs font-semibold flex items-center px-3 py-2 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+                                >
+                                    <MdDeleteOutline size={16} className="mr-1" /> Delete Entire Invoice
+                                </button>
+                            </div>
                             <SecondaryButton onClick={() => setShowDetailModal(false)}>
                                 Close
                             </SecondaryButton>
@@ -162,13 +325,33 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
 
             <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 py-6">
                 {/* Stats Summary Cards */}
-                <div className={`grid grid-cols-1 ${isOwner ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4 mb-6`}>
+                <div className={`grid grid-cols-1 ${isOwner ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-4 mb-6`}>
                     <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
                         <div>
-                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Sales Revenue</p>
-                            <h3 className="text-2xl font-bold text-emerald-700 mt-1">₹{summary.totalRevenue.toLocaleString()}</h3>
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Revenue</p>
+                            <h3 className="text-2xl font-bold text-gray-900 mt-1">₹{summary.totalRevenue.toLocaleString()}</h3>
+                        </div>
+                        <div className="h-12 w-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl">
+                            <FaRupeeSign />
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Paid Cash Collected</p>
+                            <h3 className="text-2xl font-bold text-emerald-700 mt-1">₹{(summary.totalPaidCollected || 0).toLocaleString()}</h3>
                         </div>
                         <div className="h-12 w-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl">
+                            <FaMoneyBillWave />
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Outstanding Dues / Credit</p>
+                            <h3 className="text-2xl font-bold text-red-600 mt-1">₹{(summary.totalOutstandingDue || 0).toLocaleString()}</h3>
+                        </div>
+                        <div className="h-12 w-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl">
                             <FaRupeeSign />
                         </div>
                     </div>
@@ -184,16 +367,6 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
                             </div>
                         </div>
                     )}
-
-                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
-                        <div>
-                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Invoices</p>
-                            <h3 className="text-2xl font-bold text-gray-900 mt-1">{summary.totalInvoices}</h3>
-                        </div>
-                        <div className="h-12 w-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl">
-                            <FaShoppingCart />
-                        </div>
-                    </div>
                 </div>
 
                 <div className="bg-white shadow-sm sm:rounded-xl border border-gray-200 overflow-hidden">
@@ -201,9 +374,14 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
                         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between mb-6 gap-4">
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                                    <FaReceipt className="mr-2 text-indigo-600" /> Customer Sales Invoices
+                                    <FaReceipt className={`mr-2 ${isDueOnly ? 'text-red-600' : 'text-indigo-600'}`} />
+                                    {isDueOnly ? 'Outstanding Due Invoices' : 'Customer Sales Invoices'}
                                 </h2>
-                                <p className="text-xs text-gray-500 mt-0.5">Showing grouped sales by date and customer</p>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                    {isDueOnly
+                                        ? 'Showing invoices with pending due or credit balances'
+                                        : 'Showing grouped sales by date, customer, and payment status'}
+                                </p>
                             </div>
 
                             <div className="flex flex-col sm:flex-row items-center gap-3">
@@ -225,11 +403,15 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
                         {invoices.data.length === 0 ? (
                             <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-300">
                                 <FaBoxOpen className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                                <h3 className="text-lg font-medium text-gray-900">No Sales Invoices Found</h3>
+                                <h3 className="text-lg font-medium text-gray-900">
+                                    {isDueOnly ? 'No Due Invoices Found' : 'No Sales Invoices Found'}
+                                </h3>
                                 <p className="mt-1 text-sm text-gray-500">
                                     {search
                                         ? 'No sales match your search query.'
-                                        : 'Record your first sale invoice to start tracking revenue.'}
+                                        : isDueOnly
+                                            ? 'Great news! All customer invoices are fully settled.'
+                                            : 'Record your first sale invoice to start tracking revenue.'}
                                 </p>
                                 {!search && (
                                     <div className="mt-4">
@@ -252,6 +434,7 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
                                                 <th className="py-3 px-4 w-8"></th>
                                                 <th className="py-3 px-4">Date</th>
                                                 <th className="py-3 px-4">Customer</th>
+                                                <th className="py-3 px-4">Payment Status</th>
                                                 <th className="py-3 px-4">Purchased Products</th>
                                                 <th className="py-3 px-4 text-center">Packets</th>
                                                 <th className="py-3 px-4 text-right">Invoice Total (₹)</th>
@@ -299,6 +482,19 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
                                                             </td>
                                                             <td className="py-3.5 px-4">
                                                                 <div className="flex items-center space-x-1.5">
+                                                                    {renderPaymentBadge(inv.payment_status, inv.paid_amount, inv.due_amount)}
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => openPaymentModal(inv)}
+                                                                        className="text-gray-400 hover:text-indigo-600 p-1"
+                                                                        title="Change Payment Status"
+                                                                    >
+                                                                        <FaEdit size={11} />
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-3.5 px-4">
+                                                                <div className="flex items-center space-x-1.5">
                                                                     <span className="bg-indigo-100 text-indigo-800 text-[11px] font-bold px-2 py-0.5 rounded-full">
                                                                         {inv.items_count} item{inv.items_count > 1 ? 's' : ''}
                                                                     </span>
@@ -329,6 +525,15 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
                                                                     >
                                                                         <FaEye size={13} />
                                                                     </button>
+                                                                    <a
+                                                                        href={route('sales.invoice.pdf', { sale_ids: inv.sale_ids.join(',') })}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="p-1.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors"
+                                                                        title="Download PDF Invoice"
+                                                                    >
+                                                                        <FaReceipt size={13} />
+                                                                    </a>
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => handleDeleteInvoice(inv)}
@@ -344,7 +549,7 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
                                                         {/* Expanded Inline Items Table */}
                                                         {isExpanded && (
                                                             <tr className="bg-indigo-50/40">
-                                                                <td colSpan={isOwner ? "8" : "7"} className="p-4">
+                                                                <td colSpan={isOwner ? "9" : "8"} className="p-4">
                                                                     <div className="bg-white rounded-lg border border-indigo-100 p-3 shadow-inner">
                                                                         <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-2">
                                                                             Invoice Product Breakdown

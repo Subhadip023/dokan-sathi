@@ -22,6 +22,8 @@ export default function CreateSale({ products, customers }) {
         sale_date: getTodayDate(),
         customer_id: '',
         order_discount: 0,
+        payment_status: 'full_paid',
+        paid_amount: '',
         items: [createInitialItem()],
     });
 
@@ -102,6 +104,26 @@ export default function CreateSale({ products, customers }) {
             totalPieces
         };
     }, [data.items, data.order_discount, products]);
+
+    const paymentBreakdown = useMemo(() => {
+        const grandTotal = grandTotals.grandTotal;
+        let paid = 0;
+        let due = 0;
+
+        if (data.payment_status === 'full_paid') {
+            paid = grandTotal;
+            due = 0;
+        } else if (data.payment_status === 'credit') {
+            paid = 0;
+            due = grandTotal;
+        } else {
+            const rawPaid = parseFloat(data.paid_amount) || 0;
+            paid = Math.min(grandTotal, Math.max(0, rawPaid));
+            due = Math.max(0, grandTotal - paid);
+        }
+
+        return { paid, due };
+    }, [grandTotals.grandTotal, data.payment_status, data.paid_amount]);
 
     const handleSubmitSale = (e) => {
         e.preventDefault();
@@ -414,6 +436,72 @@ export default function CreateSale({ products, customers }) {
                                             <FaRupeeSign className="text-2xl mr-1" />
                                             {grandTotals.grandTotal.toFixed(2)}
                                         </div>
+                                    </div>
+
+                                    {/* Payment Status Selection */}
+                                    <div className="pt-4 border-t border-gray-200">
+                                        <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-2">
+                                            Payment Status <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="grid grid-cols-3 gap-1.5 text-xs mb-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => setData('payment_status', 'full_paid')}
+                                                className={`py-2 px-2 rounded-lg font-bold border transition-colors ${data.payment_status === 'full_paid' ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                                            >
+                                                Full Paid
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setData('payment_status', 'partially_paid')}
+                                                className={`py-2 px-2 rounded-lg font-bold border transition-colors ${data.payment_status === 'partially_paid' ? 'bg-amber-500 text-white border-amber-500 shadow-xs' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                                            >
+                                                Partial
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setData('payment_status', 'credit')}
+                                                className={`py-2 px-2 rounded-lg font-bold border transition-colors ${data.payment_status === 'credit' ? 'bg-red-600 text-white border-red-600 shadow-xs' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                                            >
+                                                Credit / Due
+                                            </button>
+                                        </div>
+
+                                        {data.payment_status === 'partially_paid' && (
+                                            <div className="bg-amber-50 p-3 rounded-lg border border-amber-200 space-y-2 text-xs">
+                                                <div>
+                                                    <label htmlFor="paid_amount" className="block font-bold text-amber-900 mb-1">
+                                                        Amount Paid Now (₹)
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        id="paid_amount"
+                                                        step="0.01"
+                                                        min="0"
+                                                        max={grandTotals.grandTotal}
+                                                        placeholder="0.00"
+                                                        className="w-full border-amber-300 rounded-md shadow-xs focus:ring-amber-500 focus:border-amber-500 font-mono text-sm"
+                                                        value={data.paid_amount}
+                                                        onChange={(e) => setData('paid_amount', e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="flex justify-between items-center pt-1 text-amber-950 font-semibold">
+                                                    <span>Remaining Due Balance:</span>
+                                                    <span className="font-mono text-red-600 font-bold text-sm">
+                                                        ₹{paymentBreakdown.due.toFixed(2)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {data.payment_status === 'credit' && (
+                                            <div className="bg-red-50 p-3 rounded-lg border border-red-200 text-xs text-red-900 flex justify-between items-center">
+                                                <span>Total Customer Due:</span>
+                                                <span className="font-mono font-bold text-red-700 text-sm">
+                                                    ₹{paymentBreakdown.due.toFixed(2)}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 

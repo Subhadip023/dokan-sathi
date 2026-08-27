@@ -7,11 +7,11 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import Modal from '@/Components/Modal';
 import Input from '@/Components/Input';
 import Pagination from '@/Components/Pagination';
-import { FaRegEdit, FaUserPlus, FaPhoneAlt, FaUser, FaStore, FaEnvelope, FaUserCheck } from 'react-icons/fa';
+import { FaRegEdit, FaPhoneAlt, FaBuilding, FaEnvelope, FaUserCheck, FaTruck, FaMapMarkerAlt, FaUserPlus } from 'react-icons/fa';
 import { MdDeleteOutline } from 'react-icons/md';
 import debounce from 'lodash/debounce';
 
-export default function CustomerIndex({ coustomers, filters }) {
+export default function SupplierIndex({ suppliers, filters }) {
     const current_dokan = usePage().props.auth.current_dokan;
     const user = usePage().props.auth.user;
     const isOwner = (user?.role ?? 1) === 1;
@@ -20,19 +20,20 @@ export default function CustomerIndex({ coustomers, filters }) {
     const [search, setSearch] = useState(filters.search || '');
     const [isEdit, setIsEdit] = useState(false);
 
-    const { data, setData, post, errors, put, delete: deleteCustomer, reset } = useForm({
+    const { data, setData, post, errors, put, delete: deleteSupplier, reset } = useForm({
         id: null,
         dokan_id: current_dokan?.id,
         name: '',
+        company_name: '',
         phone: '',
         email: '',
-        shop_name: '',
+        address: '',
     });
 
     const performSearch = useCallback(
         debounce((query) => {
             router.get(
-                route('coustomers.index'),
+                route('suppliers.index'),
                 { search: query },
                 { preserveState: true, replace: true }
             );
@@ -52,9 +53,10 @@ export default function CustomerIndex({ coustomers, filters }) {
             id: null,
             dokan_id: current_dokan?.id,
             name: '',
+            company_name: '',
             phone: '',
             email: '',
-            shop_name: '',
+            address: '',
         });
     };
 
@@ -64,15 +66,16 @@ export default function CustomerIndex({ coustomers, filters }) {
         setShowModal(true);
     };
 
-    const openEditModal = (customer) => {
+    const openEditModal = (supplier) => {
         setIsEdit(true);
         setData({
-            id: customer.id,
+            id: supplier.id,
             dokan_id: current_dokan?.id,
-            name: customer.name || '',
-            phone: customer.phone || '',
-            email: customer.email || '',
-            shop_name: customer.shop_name || '',
+            name: supplier.name || '',
+            company_name: supplier.company_name || '',
+            phone: supplier.phone || '',
+            email: supplier.email || '',
+            address: supplier.address || '',
         });
         setShowModal(true);
     };
@@ -81,55 +84,55 @@ export default function CustomerIndex({ coustomers, filters }) {
         e.preventDefault();
         const options = {
             onSuccess: () => {
-                toast.success(isEdit ? 'Customer updated successfully' : 'Customer added successfully');
+                toast.success(isEdit ? 'Supplier updated successfully' : 'Supplier added successfully');
                 setShowModal(false);
                 resetForm();
             },
-            onError: (error) => {
-                console.log(error);
-                toast.error(isEdit ? 'Failed to update customer' : 'Failed to add customer');
+            onError: () => {
+                toast.error(isEdit ? 'Failed to update supplier' : 'Failed to add supplier');
             }
         };
 
         if (isEdit) {
-            put(route('coustomers.update', data.id), options);
+            put(route('suppliers.update', data.id), options);
         } else {
-            post(route('coustomers.store'), options);
+            post(route('suppliers.store'), options);
         }
     };
 
-    const handleDeleteCustomer = (id, name) => {
-        if (!confirm(`Are you sure you want to delete customer "${name}"?`)) {
+    const handleDeleteSupplier = (id, name) => {
+        if (!confirm(`Are you sure you want to delete supplier "${name}"?`)) {
             return;
         }
 
-        deleteCustomer(route('coustomers.destroy', id), {
+        deleteSupplier(route('suppliers.destroy', id), {
             onSuccess: () => {
-                toast.success('Customer deleted successfully');
+                toast.success('Supplier deleted successfully');
             },
             onError: () => {
-                toast.error('Failed to delete customer');
+                toast.error('Failed to delete supplier');
             }
         });
     };
 
     return (
-        <AuthenticatedLayout header="Customers">
-            <Head title="Customers" />
+        <AuthenticatedLayout header="Suppliers">
+            <Head title="Suppliers" />
 
-            {/* Modal for Add / Edit Customer */}
+            {/* Modal for Add / Edit Supplier */}
             <Modal show={showModal} onClose={() => setShowModal(false)}>
                 <div className="p-6 text-gray-900">
-                    <h2 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2">
-                        {isEdit ? 'Edit Customer' : 'Add New Customer'}
+                    <h2 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2 flex items-center">
+                        <FaTruck className="mr-2 text-indigo-600" />
+                        {isEdit ? 'Edit Supplier' : 'Add New Supplier'}
                     </h2>
                     <form className="flex flex-col gap-y-4" onSubmit={saveForm}>
                         <Input
-                            label="Customer Name"
+                            label="Supplier Contact Person Name"
                             name="name"
                             id="name"
                             type="text"
-                            placeholder="Enter customer name"
+                            placeholder="Enter supplier / contact name"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
                             error={errors.name}
@@ -138,14 +141,14 @@ export default function CustomerIndex({ coustomers, filters }) {
                         />
 
                         <Input
-                            label="Shop Name (Optional)"
-                            name="shop_name"
-                            id="shop_name"
+                            label="Company / Vendor Name (Optional)"
+                            name="company_name"
+                            id="company_name"
                             type="text"
-                            placeholder="Enter customer's shop name"
-                            value={data.shop_name}
-                            onChange={(e) => setData('shop_name', e.target.value)}
-                            error={errors.shop_name}
+                            placeholder="Enter company or agency name"
+                            value={data.company_name}
+                            onChange={(e) => setData('company_name', e.target.value)}
+                            error={errors.company_name}
                             addClass="w-full"
                         />
 
@@ -175,6 +178,24 @@ export default function CustomerIndex({ coustomers, filters }) {
                             />
                         </div>
 
+                        <div>
+                            <label htmlFor="address" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                                Office / Warehouse Address (Optional)
+                            </label>
+                            <textarea
+                                id="address"
+                                name="address"
+                                rows={3}
+                                className="w-full rounded-md border-gray-300 text-sm shadow-xs focus:border-indigo-500 focus:ring-indigo-500"
+                                placeholder="Enter supplier address..."
+                                value={data.address}
+                                onChange={(e) => setData('address', e.target.value)}
+                            />
+                            {errors.address && (
+                                <p className="text-xs text-red-600 mt-1">{errors.address}</p>
+                            )}
+                        </div>
+
                         <div className="w-full mt-4 flex items-center justify-end gap-x-3">
                             <SecondaryButton
                                 onClick={() => {
@@ -185,7 +206,7 @@ export default function CustomerIndex({ coustomers, filters }) {
                                 Cancel
                             </SecondaryButton>
                             <PrimaryButton type="submit">
-                                {isEdit ? 'Update Customer' : 'Save Customer'}
+                                {isEdit ? 'Update Supplier' : 'Save Supplier'}
                             </PrimaryButton>
                         </div>
                     </form>
@@ -197,13 +218,13 @@ export default function CustomerIndex({ coustomers, filters }) {
                     <div className="p-4 md:p-6 text-gray-900">
                         <div className="mx-auto max-w-7xl">
                             <div className="mt-2">
-                                <h2 className="text-2xl md:text-3xl font-serif text-gray-900 mb-4 md:m-5 font-bold">
-                                    Customer Directory
+                                <h2 className="text-2xl md:text-3xl font-serif text-gray-900 mb-4 md:m-5 font-bold flex items-center">
+                                    <FaTruck className="mr-3 text-indigo-600" /> Supplier Management
                                 </h2>
 
                                 <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between mb-6 mx-0 md:mx-5 gap-4">
                                     <Input
-                                        placeholder="Search by name, shop, phone, or email..."
+                                        placeholder="Search by supplier, company, phone, email, or address..."
                                         value={search}
                                         onChange={handleSearchChange}
                                         addClass="w-full md:w-1/2"
@@ -213,27 +234,27 @@ export default function CustomerIndex({ coustomers, filters }) {
                                         className="w-full md:w-auto flex items-center justify-center py-2.5"
                                     >
                                         <FaUserPlus className="mr-2 h-4 w-4" />
-                                        Add Customer
+                                        Add Supplier
                                     </PrimaryButton>
                                 </div>
                             </div>
 
                             <section className="text-gray-600 body-font">
                                 <div className="container py-2 mx-auto">
-                                    {coustomers.data.length === 0 ? (
+                                    {suppliers.data.length === 0 ? (
                                         <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-300 mx-0 md:mx-5">
-                                            <FaUser className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                                            <h3 className="text-lg font-medium text-gray-900">No Customers Found</h3>
+                                            <FaTruck className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                                            <h3 className="text-lg font-medium text-gray-900">No Suppliers Found</h3>
                                             <p className="mt-1 text-sm text-gray-500">
                                                 {search
-                                                    ? 'No customers match your search criteria.'
-                                                    : 'Start adding customers to manage your store relationships.'}
+                                                    ? 'No suppliers match your search criteria.'
+                                                    : 'Add vendor & supplier details to manage product inventory sources.'}
                                             </p>
                                             {!search && (
                                                 <div className="mt-4">
                                                     <PrimaryButton onClick={openAddModal}>
                                                         <FaUserPlus className="mr-2 h-4 w-4" />
-                                                        Add First Customer
+                                                        Add First Supplier
                                                     </PrimaryButton>
                                                 </div>
                                             )}
@@ -242,24 +263,24 @@ export default function CustomerIndex({ coustomers, filters }) {
                                         <>
                                             {/* Mobile View (Cards) */}
                                             <div className="block md:hidden space-y-4">
-                                                {coustomers.data.map((customer, index) => (
+                                                {suppliers.data.map((supplier) => (
                                                     <div
-                                                        key={customer.id}
+                                                        key={supplier.id}
                                                         className="p-4 rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow"
                                                     >
                                                         <div className="flex justify-between items-start mb-3">
                                                             <div className="flex items-center space-x-3">
                                                                 <div className="h-10 w-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-base">
-                                                                    {customer.name ? customer.name.charAt(0).toUpperCase() : 'C'}
+                                                                    {supplier.name ? supplier.name.charAt(0).toUpperCase() : 'S'}
                                                                 </div>
                                                                 <div>
                                                                     <span className="font-bold text-gray-900 text-lg block">
-                                                                        {customer.name}
+                                                                        {supplier.name}
                                                                     </span>
-                                                                    {customer.shop_name && (
+                                                                    {supplier.company_name && (
                                                                         <span className="inline-flex items-center text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md mt-0.5">
-                                                                            <FaStore className="mr-1 text-indigo-500" size={10} />
-                                                                            {customer.shop_name}
+                                                                            <FaBuilding className="mr-1 text-indigo-500" size={10} />
+                                                                            {supplier.company_name}
                                                                         </span>
                                                                     )}
                                                                 </div>
@@ -270,43 +291,38 @@ export default function CustomerIndex({ coustomers, filters }) {
                                                             <div className="flex flex-col gap-y-1">
                                                                 <div className="flex items-center">
                                                                     <FaPhoneAlt className="mr-2 text-gray-400 shrink-0" size={12} />
-                                                                    {customer.phone ? (
-                                                                        <span className="font-medium text-gray-800 font-mono">{customer.phone}</span>
+                                                                    {supplier.phone ? (
+                                                                        <span className="font-medium text-gray-800 font-mono">{supplier.phone}</span>
                                                                     ) : (
                                                                         <span className="italic text-gray-400">No phone</span>
                                                                     )}
                                                                 </div>
                                                                 <div className="flex items-center">
                                                                     <FaEnvelope className="mr-2 text-gray-400 shrink-0" size={12} />
-                                                                    {customer.email ? (
-                                                                        <span className="font-medium text-gray-800">{customer.email}</span>
+                                                                    {supplier.email ? (
+                                                                        <span className="font-medium text-gray-800">{supplier.email}</span>
                                                                     ) : (
                                                                         <span className="italic text-gray-400">No email</span>
                                                                     )}
                                                                 </div>
                                                             </div>
-                                                            <div className="flex items-center justify-between text-xs border-t border-gray-100 pt-2 font-mono flex-wrap gap-2">
-                                                                <span className="text-emerald-700 font-bold">
-                                                                    Sales: ₹{Number(customer.total_sales_amount || 0).toFixed(2)}
-                                                                </span>
-                                                                <span className="text-rose-600 font-bold">
-                                                                    Due: ₹{Number(customer.total_due_amount || 0).toFixed(2)}
-                                                                </span>
-                                                                {isOwner && customer.total_profit !== null && customer.total_profit !== undefined && (
-                                                                    <span className="text-indigo-600 font-bold">
-                                                                        Profit: ₹{Number(customer.total_profit || 0).toFixed(2)}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-gray-500 pt-1 gap-1">
+
+                                                            {supplier.address && (
+                                                                <div className="flex items-start text-xs border-t border-gray-100 pt-2 text-gray-600">
+                                                                    <FaMapMarkerAlt className="mr-1.5 text-gray-400 mt-0.5 shrink-0" size={11} />
+                                                                    <span>{supplier.address}</span>
+                                                                </div>
+                                                            )}
+
+                                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-gray-500 pt-1 gap-1 border-t border-gray-100">
                                                                 <div className="flex items-center">
                                                                     <FaUserCheck className="mr-1 text-indigo-500" size={11} />
-                                                                    Added by: <strong className="ml-1 text-gray-700">{customer.added_by ? customer.added_by.name : 'Store Owner'}</strong>
+                                                                    Added by: <strong className="ml-1 text-gray-700">{supplier.added_by ? supplier.added_by.name : 'Store Owner'}</strong>
                                                                 </div>
-                                                                {customer.edited_by && (
+                                                                {supplier.edited_by && (
                                                                     <div className="flex items-center">
                                                                         <FaRegEdit className="mr-1 text-amber-600" size={11} />
-                                                                        Edited by: <strong className="ml-1 text-gray-700">{customer.edited_by.name}</strong>
+                                                                        Edited by: <strong className="ml-1 text-gray-700">{supplier.edited_by.name}</strong>
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -314,17 +330,17 @@ export default function CustomerIndex({ coustomers, filters }) {
 
                                                         <div className="flex justify-between items-center pt-2">
                                                             <span className="text-[11px] text-gray-400">
-                                                                {new Date(customer.created_at).toLocaleDateString()}
+                                                                {new Date(supplier.created_at).toLocaleDateString()}
                                                             </span>
                                                             <div className="flex items-center gap-x-3">
                                                                 <button
-                                                                    onClick={() => openEditModal(customer)}
+                                                                    onClick={() => openEditModal(supplier)}
                                                                     className="text-blue-600 hover:text-blue-800 transition-colors flex items-center text-xs font-semibold"
                                                                 >
                                                                     <FaRegEdit size={14} className="mr-1" /> Edit
                                                                 </button>
                                                                 <button
-                                                                    onClick={() => handleDeleteCustomer(customer.id, customer.name)}
+                                                                    onClick={() => handleDeleteSupplier(supplier.id, supplier.name)}
                                                                     className="text-red-600 hover:text-red-800 transition-colors flex items-center text-xs font-semibold"
                                                                 >
                                                                     <MdDeleteOutline size={16} className="mr-1" /> Delete
@@ -341,11 +357,9 @@ export default function CustomerIndex({ coustomers, filters }) {
                                                     <thead>
                                                         <tr>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 w-12">#</th>
-                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Customer & Shop Name</th>
+                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Supplier & Company</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Phone & Email</th>
-                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Total Sales (₹)</th>
-                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Total Due (₹)</th>
-                                                            {isOwner && <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Total Profit (₹)</th>}
+                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Address</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Added By</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Last Edited By</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Date Added</th>
@@ -353,43 +367,43 @@ export default function CustomerIndex({ coustomers, filters }) {
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {coustomers.data.map((customer, index) => (
-                                                            <tr key={customer.id} className="border-b bg-white hover:bg-gray-50 transition-colors">
+                                                        {suppliers.data.map((supplier, index) => (
+                                                            <tr key={supplier.id} className="border-b bg-white hover:bg-gray-50 transition-colors">
                                                                 <td className="px-4 py-3 text-gray-500 font-mono text-sm">{index + 1}</td>
                                                                 <td className="px-4 py-3 font-semibold text-gray-900">
                                                                     <div className="flex items-center">
                                                                         <div className="h-9 w-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm mr-3 border border-indigo-100 shrink-0">
-                                                                            {customer.name ? customer.name.charAt(0).toUpperCase() : 'C'}
+                                                                            {supplier.name ? supplier.name.charAt(0).toUpperCase() : 'S'}
                                                                         </div>
                                                                         <div>
-                                                                            <span className="block text-sm font-bold text-gray-900">{customer.name}</span>
-                                                                            {customer.shop_name ? (
+                                                                            <span className="block text-sm font-bold text-gray-900">{supplier.name}</span>
+                                                                            {supplier.company_name ? (
                                                                                 <span className="inline-flex items-center text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded mt-0.5">
-                                                                                    <FaStore className="mr-1 text-indigo-500" size={10} />
-                                                                                    {customer.shop_name}
+                                                                                    <FaBuilding className="mr-1 text-indigo-500" size={10} />
+                                                                                    {supplier.company_name}
                                                                                 </span>
                                                                             ) : (
-                                                                                <span className="text-[11px] text-gray-400 italic">No shop name</span>
+                                                                                <span className="text-[11px] text-gray-400 italic">No company name</span>
                                                                             )}
                                                                         </div>
                                                                     </div>
                                                                 </td>
                                                                 <td className="px-4 py-3 text-gray-700 text-xs">
                                                                     <div className="flex flex-col space-y-1">
-                                                                        {customer.phone ? (
+                                                                        {supplier.phone ? (
                                                                             <span className="inline-flex items-center font-mono">
                                                                                 <FaPhoneAlt className="mr-1.5 text-gray-400 shrink-0" size={12} />
-                                                                                {customer.phone}
+                                                                                {supplier.phone}
                                                                             </span>
                                                                         ) : (
                                                                             <span className="inline-flex items-center text-gray-400 italic">
                                                                                 <FaPhoneAlt className="mr-1.5 text-gray-300 shrink-0" size={12} /> N/A
                                                                             </span>
                                                                         )}
-                                                                        {customer.email ? (
+                                                                        {supplier.email ? (
                                                                             <span className="inline-flex items-center">
                                                                                 <FaEnvelope className="mr-1.5 text-gray-400 shrink-0" size={12} />
-                                                                                {customer.email}
+                                                                                {supplier.email}
                                                                             </span>
                                                                         ) : (
                                                                             <span className="inline-flex items-center text-gray-400 italic">
@@ -398,49 +412,48 @@ export default function CustomerIndex({ coustomers, filters }) {
                                                                         )}
                                                                     </div>
                                                                 </td>
-                                                                <td className="px-4 py-3 font-mono font-extrabold text-emerald-700 text-xs">
-                                                                    ₹{Number(customer.total_sales_amount || 0).toFixed(2)}
+                                                                <td className="px-4 py-3 text-gray-700 text-xs max-w-xs truncate">
+                                                                    {supplier.address ? (
+                                                                        <span className="inline-flex items-center" title={supplier.address}>
+                                                                            <FaMapMarkerAlt className="mr-1 text-gray-400 shrink-0" size={11} />
+                                                                            <span className="truncate">{supplier.address}</span>
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="text-gray-400 italic">N/A</span>
+                                                                    )}
                                                                 </td>
-                                                                <td className="px-4 py-3 font-mono font-bold text-rose-600 text-xs">
-                                                                    ₹{Number(customer.total_due_amount || 0).toFixed(2)}
-                                                                </td>
-                                                                {isOwner && (
-                                                                    <td className="px-4 py-3 font-mono font-bold text-indigo-600 text-xs">
-                                                                        ₹{Number(customer.total_profit || 0).toFixed(2)}
-                                                                    </td>
-                                                                )}
                                                                 <td className="px-4 py-3 text-gray-700 text-xs">
                                                                     <span className="inline-flex items-center font-medium bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs">
                                                                         <FaUserCheck className="mr-1.5 text-indigo-500" size={11} />
-                                                                        {customer.added_by ? customer.added_by.name : 'Store Owner'}
+                                                                        {supplier.added_by ? supplier.added_by.name : 'Store Owner'}
                                                                     </span>
                                                                 </td>
                                                                 <td className="px-4 py-3 text-gray-700 text-xs">
-                                                                    {customer.edited_by ? (
+                                                                    {supplier.edited_by ? (
                                                                         <span className="inline-flex items-center font-medium bg-amber-50 text-amber-800 px-2.5 py-1 rounded-full text-xs border border-amber-200">
                                                                             <FaRegEdit className="mr-1.5 text-amber-600" size={11} />
-                                                                            {customer.edited_by.name}
+                                                                            {supplier.edited_by.name}
                                                                         </span>
                                                                     ) : (
                                                                         <span className="text-gray-400 italic text-xs">N/A</span>
                                                                     )}
                                                                 </td>
                                                                 <td className="px-4 py-3 text-gray-500 text-xs font-mono">
-                                                                    {new Date(customer.created_at).toLocaleDateString()}
+                                                                    {new Date(supplier.created_at).toLocaleDateString()}
                                                                 </td>
                                                                 <td className="px-4 py-3 text-center">
                                                                     <div className="flex items-center justify-center space-x-3">
                                                                         <button
-                                                                            onClick={() => openEditModal(customer)}
+                                                                            onClick={() => openEditModal(supplier)}
                                                                             className="text-blue-600 hover:text-blue-800 hover:scale-110 transition-all duration-200"
-                                                                            title="Edit Customer"
+                                                                            title="Edit Supplier"
                                                                         >
                                                                             <FaRegEdit size={18} />
                                                                         </button>
                                                                         <button
-                                                                            onClick={() => handleDeleteCustomer(customer.id, customer.name)}
+                                                                            onClick={() => handleDeleteSupplier(supplier.id, supplier.name)}
                                                                             className="text-red-600 hover:text-red-800 hover:scale-110 transition-all duration-200"
-                                                                            title="Delete Customer"
+                                                                            title="Delete Supplier"
                                                                         >
                                                                             <MdDeleteOutline size={20} />
                                                                         </button>
@@ -455,7 +468,7 @@ export default function CustomerIndex({ coustomers, filters }) {
                                     )}
 
                                     <div className="flex justify-center mt-6">
-                                        <Pagination links={coustomers.links} />
+                                        <Pagination links={suppliers.links} />
                                     </div>
                                 </div>
                             </section>

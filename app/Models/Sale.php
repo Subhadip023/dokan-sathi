@@ -10,6 +10,10 @@ class Sale extends Model
     /** @use HasFactory<\Database\Factories\SaleFactory> */
     use HasFactory;
 
+    const STATUS_FULL_PAID      = 'full_paid';
+    const STATUS_PARTIALLY_PAID = 'partially_paid';
+    const STATUS_CREDIT         = 'credit';
+
     protected $fillable = [
         'dokan_id',
         'sale_date',
@@ -20,6 +24,9 @@ class Sale extends Model
         'rate',
         'cost_rate',
         'discount',
+        'payment_status',
+        'paid_amount',
+        'due_amount',
     ];
 
     public function dokan()

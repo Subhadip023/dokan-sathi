@@ -14,6 +14,9 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\DokanController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\InvestmentController;
+use App\Http\Controllers\LicenseController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\OrderController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -38,9 +41,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/price-list', [ProductController::class, 'priceList'])->name('products.price-list');
     Route::resource('products', ProductController::class);
     Route::resource('coustomers', CoustomerController::class);
+    Route::resource('suppliers', SupplierController::class);
+    Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status-update');
+    Route::resource('orders', OrderController::class);
+    Route::get('/sales/due', [SaleController::class, 'dueInvoices'])->name('sales.due');
+    Route::get('/sales/invoice/pdf', [SaleController::class, 'downloadInvoice'])->name('sales.invoice.pdf');
+    Route::patch('/sales/payment-status', [SaleController::class, 'updatePaymentStatus'])->name('sales.payment-status');
     Route::resource('sales', SaleController::class);
     Route::resource('overhead-costs', OverheadCostController::class);
     Route::resource('staff', StaffController::class);
+    Route::resource('licenses', LicenseController::class)->except(['create', 'edit', 'show']);
     Route::resource('investments', InvestmentController::class)->except(['create', 'edit', 'show']);
     Route::get('/reports/pnl', [ReportController::class, 'pnl'])->name('reports.pnl');
     Route::get('/seed-products', DemoController::class)->name('products.seed');

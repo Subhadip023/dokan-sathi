@@ -8,7 +8,10 @@ import {
     FaBoxes,
     FaTags,
     FaUsers,
+    FaTruck,
+    FaClipboardList,
     FaShoppingCart,
+    FaFileInvoiceDollar,
     FaReceipt,
     FaChartLine,
     FaStore,
@@ -18,7 +21,8 @@ import {
     FaBars,
     FaTimes,
     FaChevronRight,
-    FaHandHoldingUsd
+    FaHandHoldingUsd,
+    FaIdCard
 } from 'react-icons/fa';
 
 export default function AuthenticatedLayout({ header, children }) {
@@ -53,10 +57,28 @@ export default function AuthenticatedLayout({ header, children }) {
             icon: FaUsers,
         },
         {
+            name: 'Suppliers',
+            href: route('suppliers.index'),
+            active: route().current('suppliers.*'),
+            icon: FaTruck,
+        },
+        {
+            name: 'Orders',
+            href: route('orders.index'),
+            active: route().current('orders.*'),
+            icon: FaClipboardList,
+        },
+        {
             name: 'Sales (POS)',
             href: route('sales.index'),
-            active: route().current('sales.*'),
+            active: route().current('sales.index'),
             icon: FaShoppingCart,
+        },
+        {
+            name: 'Due Invoices',
+            href: route('sales.due'),
+            active: route().current('sales.due'),
+            icon: FaFileInvoiceDollar,
         },
         {
             name: 'Overhead Costs',
@@ -83,6 +105,13 @@ export default function AuthenticatedLayout({ header, children }) {
             href: route('reports.pnl'),
             active: route().current('reports.pnl'),
             icon: FaChartLine,
+            ownerOnly: true,
+        },
+        {
+            name: 'Licenses',
+            href: route('licenses.index'),
+            active: route().current('licenses.*'),
+            icon: FaIdCard,
             ownerOnly: true,
         },
         {

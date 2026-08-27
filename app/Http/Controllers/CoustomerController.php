@@ -38,6 +38,7 @@ class CoustomerController extends Controller
         $coustomers->getCollection()->transform(function ($customer) use ($isEmployee) {
             $sales = $customer->sales;
             $customer->total_sales_amount = round($sales->sum(fn($s) => $s->total_amount), 2);
+            $customer->total_due_amount = round($sales->sum(fn($s) => ($s->payment_status === 'full_paid') ? 0 : (($s->payment_status === 'credit') ? $s->total_amount : ($s->due_amount ?? 0))), 2);
             $customer->total_profit = $isEmployee ? null : round($sales->sum(fn($s) => $s->profit), 2);
             unset($customer->sales);
             return $customer;

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Invoice - TS Medipack Solutions</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 24px;
+      color: #222;
+      background: #fdfdfd;
+    }
+    .invoice-box {
+      max-width: 800px;
+      margin: auto;
+      padding: 24px;
+      border: 1px solid #ccc;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+      background: #fff;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 2px solid #000;
+      padding-bottom: 12px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .header p {
+      margin: 3px 0;
+      font-size: 13px;
+      color: #444;
+    }
+    .info-table {
+      width: 100%;
+      margin-top: 15px;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .info-table td {
+      vertical-align: top;
+      padding: 4px 0;
+    }
+    .items-table {
+      width: 100%;
+      margin-top: 16px;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .items-table th, .items-table td {
+      border: 1px solid #aaa;
+      padding: 8px;
+      text-align: left;
+    }
+    .items-table th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+    .text-right {
+      text-align: right;
+    }
+    .text-center {
+      text-align: center;
+    }
+    .total-row {
+      font-weight: bold;
+      background-color: #fafafa;
+    }
+    .footer {
+      margin-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+    .bank-details {
+      width: 55%;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .signatures {
+      width: 40%;
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 110px;
+    }
+    @media print {
+      body {
+        padding: 0;
+        background: #fff;
+      }
+      .invoice-box {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="invoice-box">
+  <div class="header">
+    <p style="font-size: 12px; font-weight: bold; margin-bottom: 2px;">CASH / CREDIT MEMO</p>
+    <h1>TS MEDIPACK SOLUTIONS</h1>
+    <p>Packaging Supplies • Medicine Envelopes • Custom Covers</p>
+    <p>Flat 408, Indradhenu Apartment, Bidyutpally, Singur, Hooghly - 712409[cite: 1]</p>
+    <p><strong>Mobile:</strong> 6290765575 | <strong>MSME Reg:</strong> UDYAM-WB-07-0141103[cite: 1]</p>
+  </div>
+
+  <table class="info-table">
+    <tr>
+      <td style="width: 60%;">
+        <strong>Billed To:</strong><br>
+        <strong>M/s:</strong> Maa Tara Pharmacy<br>
+        <strong>Address:</strong> Singur Station Road, Hooghly - 712409<br>
+        <strong>Phone:</strong> 98XXXXXXXX
+      </td>
+      <td style="width: 40%; text-align: right;">
+        <strong>Invoice No:</strong> TS/2026/001<br>
+        <strong>Date:</strong> 26/08/2026<br>
+        <strong>Payment Mode:</strong> Cash / Credit (15 Days)
+      </td>
+    </tr>
+  </table>
+
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th style="width: 5%;" class="text-center">Sl.</th>
+        <th style="width: 50%;">Item Description</th>
+        <th style="width: 15%;" class="text-center">Qty</th>
+        <th style="width: 15%;" class="text-right">Rate (₹)</th>
+        <th style="width: 15%;" class="text-right">Amount (₹)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="text-center">1</td>
+        <td><strong>White Medicine Envelopes</strong><br><small>Size: 4x3 inch, 70 GSM</small></td>
+        <td class="text-center">5,000 pcs</td>
+        <td class="text-right">380.00 / 1k</td>
+        <td class="text-right">1,900.00</td>
+      </tr>
+      <tr>
+        <td class="text-center">2</td>
+        <td><strong>Printed Dosage Paper Covers</strong><br><small>Size: 5x3.5 inch, 2-Color Print</small></td>
+        <td class="text-center">10,000 pcs</td>
+        <td class="text-right">420.00 / 1k</td>
+        <td class="text-right">4,200.00</td>
+      </tr>
+      <tr>
+        <td class="text-center">3</td>
+        <td><strong>Packaging Rubber Bands</strong><br><small>Grade-A Elastic</small></td>
+        <td class="text-center">2 Kgs</td>
+        <td class="text-right">180.00 / Kg</td>
+        <td class="text-right">360.00</td>
+      </tr>
+      <tr class="total-row">
+        <td colspan="4" class="text-right">Sub Total:</td>
+        <td class="text-right">₹ 6,460.00</td>
+      </tr>
+      <tr class="total-row">
+        <td colspan="4" class="text-right">Discount:</td>
+        <td class="text-right">- ₹ 100.00</td>
+      </tr>
+      <tr class="total-row" style="font-size: 14px; background: #eee;">
+        <td colspan="4" class="text-right"><strong>Grand Total:</strong></td>
+        <td class="text-right"><strong>₹ 6,360.00</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="font-size: 12px; margin: 8px 0;"><strong>Amount in Words:</strong> Six Thousand Three Hundred Sixty Rupees Only.</p>
+
+  <div class="footer">
+    <div class="bank-details">
+      <strong>Payment Details:</strong><br>
+      Bank Name: Punjab National Bank (PNB)[cite: 1]<br>
+      Account Name: TS MEDIPACK SOLUTIONS[cite: 1]<br>
+      IFSC Code: PUNB0016220[cite: 1]<br>
+      UPI ID: 6290765575@upi[cite: 1]
+    </div>
+    <div class="signatures">
+      <div style="font-size: 11px; color: #555;">Receiver's Signature</div>
+      <div>
+        <strong>For TS MEDIPACK SOLUTIONS</strong><br><br><br>
+        <span style="font-size: 12px;">(Proprietor)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

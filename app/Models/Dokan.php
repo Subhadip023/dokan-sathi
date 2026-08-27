@@ -64,4 +64,8 @@ class Dokan extends Model
     public function staff(){
         return $this->hasMany(User::class, 'dokan_id');
     }
+
+    public function licenses(){
+        return $this->hasMany(License::class, 'dokan_id');
+    }
 }

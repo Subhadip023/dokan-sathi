@@ -42,6 +42,8 @@ class StoreSaleRequest extends FormRequest
             'items.*.qty' => 'required|integer|min:1',
             'items.*.discount' => 'nullable|numeric|min:0',
             'order_discount' => 'nullable|numeric|min:0',
+            'payment_status' => 'nullable|string|in:full_paid,partially_paid,credit',
+            'paid_amount' => 'nullable|numeric|min:0',
             'dokan_id' => [
                 'required',
                 Rule::exists('dokans', 'id')->where(function ($query) use ($currentDokanId) {
