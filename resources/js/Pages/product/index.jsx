@@ -285,19 +285,21 @@ export default function Dashboard({ products, packetSizes = [], summary, filters
                                             <div className="block md:hidden space-y-4">
                                                 {products.data.map((product, index) => (
                                                     <div key={product.id} className={`p-4 rounded-lg border shadow-sm ${product.purchased_packets <= product.reorder_level ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-200'}`}>
-                                                        <div className="flex justify-between items-start mb-2">
+                                                        <div className="flex justify-between items-start mb-3">
                                                             <div>
                                                                 <span className="text-xs font-semibold text-gray-500 block mb-1">#{index + 1}</span>
-                                                                <span className="font-bold text-gray-900 text-lg">{product.name}</span>
+                                                                <span className="font-bold text-gray-900 text-lg block">{product.name}</span>
+                                                                {product.description && (
+                                                                    <span className="text-xs text-gray-500 italic block mt-0.5">{product.description}</span>
+                                                                )}
                                                             </div>
-                                                            <div className="text-right text-sm">
+                                                            <div className="text-right text-sm shrink-0 pl-2">
                                                                 <span className="text-emerald-700 font-bold block text-xs">Selling: ₹{product.selling_rate}</span>
                                                                 {isOwner && product.cost_rate !== undefined && product.cost_rate !== null && (
                                                                     <span className="text-gray-500 block text-xs">Cost: ₹{product.cost_rate}</span>
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <div className="text-sm text-gray-600 mb-3 line-clamp-2">{product.description}</div>
                                                         
                                                         <div className="flex justify-between items-center mb-3">
                                                             <div className="flex flex-col">
@@ -328,8 +330,7 @@ export default function Dashboard({ products, packetSizes = [], summary, filters
                                                     <thead>
                                                         <tr>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">#</th>
-                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Name</th>
-                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Description</th>
+                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Name & Description</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Purchased Packets</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Packet Size</th>
                                                             {isOwner && <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Cost Rate</th>}
@@ -342,8 +343,14 @@ export default function Dashboard({ products, packetSizes = [], summary, filters
                                                         {products.data.map((product, index) => (
                                                             <tr key={product.id} className={`border-b bg-white hover:bg-gray-50 ${product.purchased_packets <= product.reorder_level ? 'bg-red-50 text-red-600' : ''}`}>
                                                                 <td className="px-4 py-3">{index + 1}</td>
-                                                                <td className="px-4 py-3 font-medium text-gray-900">{product.name}</td>
-                                                                <td className="px-4 py-3 max-w-xs truncate" title={product.description}>{product.description}</td>
+                                                                <td className="px-4 py-3">
+                                                                    <span className="font-semibold text-gray-900 block">{product.name}</span>
+                                                                    {product.description && (
+                                                                        <span className="text-xs text-gray-500 italic block mt-0.5 max-w-xs truncate" title={product.description}>
+                                                                            {product.description}
+                                                                        </span>
+                                                                    )}
+                                                                </td>
                                                                 <td className="px-4 py-3">
                                                                     <QuantityTicker product={product} />
                                                                 </td>
@@ -366,7 +373,7 @@ export default function Dashboard({ products, packetSizes = [], summary, filters
                                                     {summary && (
                                                         <tfoot className="bg-gray-100 font-bold border-t-2 border-gray-300 text-sm">
                                                             <tr>
-                                                                <td colSpan="3" className="px-4 py-3.5 text-right uppercase text-xs tracking-wider text-gray-700">Total Stock & Valuation:</td>
+                                                                <td colSpan="2" className="px-4 py-3.5 text-right uppercase text-xs tracking-wider text-gray-700">Total Stock & Valuation:</td>
                                                                 <td className="px-4 py-3.5 text-indigo-700 font-mono">
                                                                     {summary.totalPackets} pkts <span className="text-xs text-gray-500 font-normal">({summary.totalPieces} pcs)</span>
                                                                 </td>

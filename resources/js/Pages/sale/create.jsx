@@ -226,37 +226,42 @@ export default function CreateSale({ products, customers }) {
 
                             {/* Cart / Products Items Section */}
                             <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+                                <div className="flex items-center justify-between mb-4">
                                     <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider flex items-center">
                                         <FaBoxes className="mr-2 text-indigo-500" /> Product Items ({data.items.length})
                                     </h2>
+                                </div>
 
-                                    {/* Quick Add Product Bar */}
-                                    {products.length > 0 && (
-                                        <div className="flex items-center space-x-2 w-full sm:w-auto">
+                                {/* Quick Add Product Bar */}
+                                {products.length > 0 && (
+                                    <div className="bg-indigo-50/60 p-3.5 rounded-xl border border-indigo-100 mb-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                                        <div className="flex-1 min-w-0">
+                                            <span className="text-xs font-bold text-indigo-900 block mb-1">Quick Add Product to Cart</span>
                                             <select
-                                                className="border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-xs py-1.5"
+                                                className="w-full border-indigo-200 rounded-lg shadow-2xs focus:ring-indigo-500 focus:border-indigo-500 text-xs py-2 bg-white font-medium"
                                                 value={quickSelectedProductId}
                                                 onChange={(e) => setQuickSelectedProductId(e.target.value)}
                                             >
-                                                <option value="">-- Add Product --</option>
+                                                <option value="">-- Choose Product to Add --</option>
                                                 {products.map(p => (
                                                     <option key={p.id} value={p.id}>
-                                                        {p.name} (Stock: {p.purchased_packets} pkts | ₹{p.selling_rate}/pkt)
+                                                        {p.name} {p.description ? `- ${p.description}` : ''} (Stock: {p.purchased_packets} pkts | ₹{p.selling_rate}/pkt)
                                                     </option>
                                                 ))}
                                             </select>
+                                        </div>
+                                        <div className="sm:self-end shrink-0">
                                             <button
                                                 type="button"
                                                 onClick={handleAddQuickProduct}
                                                 disabled={!quickSelectedProductId}
-                                                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-semibold px-3 py-1.5 rounded-md flex items-center transition-colors"
+                                                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center justify-center transition-colors shadow-xs"
                                             >
-                                                <FaPlus className="mr-1" size={10} /> Add
+                                                <FaPlus className="mr-1.5" size={11} /> Add to Cart
                                             </button>
                                         </div>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
 
                                 {products.length === 0 ? (
                                     <div className="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-300">
@@ -271,7 +276,7 @@ export default function CreateSale({ products, customers }) {
                                                 <thead>
                                                     <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase font-semibold text-gray-500">
                                                         <th className="py-2.5 px-3 w-10">#</th>
-                                                        <th className="py-2.5 px-3 min-w-[180px]">Product</th>
+                                                        <th className="py-2.5 px-3 min-w-[220px]">Product & Description</th>
                                                         <th className="py-2.5 px-3 w-28">Rate/Pkt</th>
                                                         <th className="py-2.5 px-3 w-28">Packets Qty</th>
                                                         <th className="py-2.5 px-3 w-28">Item Disc (₹)</th>
@@ -289,11 +294,11 @@ export default function CreateSale({ products, customers }) {
                                                         const lineTotal = itemProduct ? Math.max(0, (qty * rate) - totalItemDisc) : 0;
 
                                                         return (
-                                                            <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                                                            <tr key={idx} className="hover:bg-gray-50/50 transition-colors align-top">
                                                                 <td className="py-3 px-3 text-xs text-gray-400 font-mono">{idx + 1}</td>
                                                                 <td className="py-3 px-3">
                                                                     <select
-                                                                        className="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-xs"
+                                                                        className="w-full border-gray-300 rounded-md shadow-2xs focus:ring-indigo-500 focus:border-indigo-500 text-xs font-medium"
                                                                         value={item.product_id}
                                                                         onChange={(e) => updateItemRow(idx, 'product_id', e.target.value)}
                                                                         required
@@ -306,9 +311,20 @@ export default function CreateSale({ products, customers }) {
                                                                         ))}
                                                                     </select>
                                                                     {itemProduct && (
-                                                                        <span className="text-[11px] text-gray-400 block mt-0.5">
-                                                                            Total pcs: {qty * itemProduct.packet_size}
-                                                                        </span>
+                                                                        <div className="mt-2 p-2.5 bg-gray-50 rounded-lg border border-gray-200 space-y-1">
+                                                                            <div className="font-bold text-gray-900 text-xs">{itemProduct.name}</div>
+                                                                            {itemProduct.description ? (
+                                                                                <div className="text-[11px] text-gray-600 italic leading-snug">
+                                                                                    {itemProduct.description}
+                                                                                </div>
+                                                                            ) : (
+                                                                                <div className="text-[11px] text-gray-400 italic">No description available</div>
+                                                                            )}
+                                                                            <div className="text-[10px] text-gray-500 font-mono pt-1 border-t border-gray-200 flex justify-between">
+                                                                                <span>{qty * itemProduct.packet_size} pcs total</span>
+                                                                                <span>Stock: {itemProduct.purchased_packets} pkts</span>
+                                                                            </div>
+                                                                        </div>
                                                                     )}
                                                                 </td>
                                                                 <td className="py-3 px-3 font-mono text-gray-700">
