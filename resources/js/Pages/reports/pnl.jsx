@@ -56,7 +56,7 @@ export default function PnLReport({ filters, summary, productPerformance, overhe
         <AuthenticatedLayout header="Profit & Loss Statement">
             <Head title="Profit & Loss Report" />
 
-            <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 py-6">
+            <div className="mx-auto w-full sm:px-6 lg:px-8 py-6">
                 {/* Header & Date Filter Bar */}
                 <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm mb-6 print:hidden">
                     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">

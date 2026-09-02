@@ -90,7 +90,7 @@ export default function StaffIndex({ staff, dokan }) {
         <AuthenticatedLayout header="Staff Management">
             <Head title="Staff Management" />
 
-            <div className="py-8 space-y-6 max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div className="py-8 space-y-6 w-full mx-auto sm:px-6 lg:px-8">
                 {/* Header Card */}
                 <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-l-indigo-600">
                     <div>

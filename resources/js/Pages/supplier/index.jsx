@@ -213,10 +213,10 @@ export default function SupplierIndex({ suppliers, filters }) {
                 </div>
             </Modal>
 
-            <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div className="mx-auto w-full sm:px-6 lg:px-8">
                 <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                     <div className="p-4 md:p-6 text-gray-900">
-                        <div className="mx-auto max-w-7xl">
+                        <div className="mx-auto w-full">
                             <div className="mt-2">
                                 <h2 className="text-2xl md:text-3xl font-serif text-gray-900 mb-4 md:m-5 font-bold flex items-center">
                                     <FaTruck className="mr-3 text-indigo-600" /> Supplier Management

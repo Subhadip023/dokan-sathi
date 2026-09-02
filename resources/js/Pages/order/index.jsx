@@ -619,7 +619,7 @@ export default function OrderIndex({ orders, summary, suppliers, products, filte
                 )}
             </Modal>
 
-            <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 py-6">
+            <div className="mx-auto w-full sm:px-6 lg:px-8 py-6">
                 {/* Stats Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-xs flex items-center justify-between">

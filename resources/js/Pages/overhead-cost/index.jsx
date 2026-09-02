@@ -182,7 +182,7 @@ export default function OverheadCostIndex({ overheadCosts, summary, filters }) {
                 </div>
             </Modal>
 
-            <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div className="mx-auto w-full sm:px-6 lg:px-8">
                 {/* Stats Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
@@ -208,7 +208,7 @@ export default function OverheadCostIndex({ overheadCosts, summary, filters }) {
 
                 <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                     <div className="p-4 md:p-6 text-gray-900">
-                        <div className="mx-auto max-w-7xl">
+                        <div className="mx-auto w-full">
                             <div className="mt-2">
                                 <h2 className="text-2xl md:text-3xl font-serif text-gray-900 mb-4 md:m-5 font-bold">
                                     Overhead Expense Log

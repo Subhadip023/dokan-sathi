@@ -19,7 +19,7 @@ export default function PriceList({ products, dokan: pageDokan }) {
     const storeLogo = activeDokan?.logo_url || null;
 
     const priceListBody = (
-        <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 py-6">
+        <div className="mx-auto w-full sm:px-6 lg:px-8 py-6">
             {/* Store Information Banner */}
             <div className="bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 text-white rounded-2xl p-6 md:p-8 shadow-lg mb-8 relative overflow-hidden print:bg-none print:text-black print:p-4 print:shadow-none print:border-b-2 print:border-gray-800 print:mb-4">
                 <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">

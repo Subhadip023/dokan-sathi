@@ -5,7 +5,7 @@ export default function Dashboard({ totalProducts, lowStock, totalValue, lowStoc
     return (
         <AuthenticatedLayout header={'Dashboard'} >
             <Head title="Dashboard" />
-            <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div className="mx-auto w-full sm:px-6 lg:px-8">
                 <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
 
                     <div className=" p-4 md:p-6 text-gray-900 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -19,7 +19,9 @@ export default function Dashboard({ totalProducts, lowStock, totalValue, lowStoc
                         </Link>
                         <div className='bg-gray-100 shadow-sm w-full md:w-1/3 p-4 h-auto md:h-32 rounded-lg text-center flex flex-col justify-center '>
                             <h2 className='text-2xl md:text-4xl font-serif font-bold'>Total Value</h2>
-                            <p className='mt-2 md:mt-5 font-serif text-xl md:text-2xl'>₹{totalValue}</p>
+                            <p className='mt-2 md:mt-5 font-serif text-xl md:text-2xl'>
+                                ₹{Number(totalValue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </p>
                         </div>
                     </div>
 

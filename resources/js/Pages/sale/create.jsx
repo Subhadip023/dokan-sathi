@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import SearchableSelect from '@/Components/SearchableSelect';
 import { FaShoppingCart, FaArrowLeft, FaPlus, FaTrash, FaUser, FaCalendarAlt, FaRupeeSign, FaBoxes, FaReceipt, FaTag } from 'react-icons/fa';
 
 export default function CreateSale({ products, customers }) {
@@ -150,7 +151,7 @@ export default function CreateSale({ products, customers }) {
         <AuthenticatedLayout header="Record New Sale">
             <Head title="Create Sale Invoice" />
 
-            <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 py-6">
+            <div className="mx-auto w-full sm:px-6 lg:px-8 py-6">
                 {/* Header Action Bar */}
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
                     <div className="flex items-center space-x-3">
@@ -237,18 +238,12 @@ export default function CreateSale({ products, customers }) {
                                     <div className="bg-indigo-50/60 p-3.5 rounded-xl border border-indigo-100 mb-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                                         <div className="flex-1 min-w-0">
                                             <span className="text-xs font-bold text-indigo-900 block mb-1">Quick Add Product to Cart</span>
-                                            <select
-                                                className="w-full border-indigo-200 rounded-lg shadow-2xs focus:ring-indigo-500 focus:border-indigo-500 text-xs py-2 bg-white font-medium"
+                                            <SearchableSelect
+                                                options={products}
                                                 value={quickSelectedProductId}
-                                                onChange={(e) => setQuickSelectedProductId(e.target.value)}
-                                            >
-                                                <option value="">-- Choose Product to Add --</option>
-                                                {products.map(p => (
-                                                    <option key={p.id} value={p.id}>
-                                                        {p.name} {p.description ? `- ${p.description}` : ''} (Stock: {p.purchased_packets} pkts | ₹{p.selling_rate}/pkt)
-                                                    </option>
-                                                ))}
-                                            </select>
+                                                onChange={(val) => setQuickSelectedProductId(val)}
+                                                placeholder="Search product name, description..."
+                                            />
                                         </div>
                                         <div className="sm:self-end shrink-0">
                                             <button
@@ -297,19 +292,12 @@ export default function CreateSale({ products, customers }) {
                                                             <tr key={idx} className="hover:bg-gray-50/50 transition-colors align-top">
                                                                 <td className="py-3 px-3 text-xs text-gray-400 font-mono">{idx + 1}</td>
                                                                 <td className="py-3 px-3">
-                                                                    <select
-                                                                        className="w-full border-gray-300 rounded-md shadow-2xs focus:ring-indigo-500 focus:border-indigo-500 text-xs font-medium"
+                                                                    <SearchableSelect
+                                                                        options={products}
                                                                         value={item.product_id}
-                                                                        onChange={(e) => updateItemRow(idx, 'product_id', e.target.value)}
-                                                                        required
-                                                                    >
-                                                                        <option value="">Choose Product</option>
-                                                                        {products.map(p => (
-                                                                            <option key={p.id} value={p.id}>
-                                                                                {p.name} (Stock: {p.purchased_packets} pkts | {p.packet_size} pcs/pkt)
-                                                                            </option>
-                                                                        ))}
-                                                                    </select>
+                                                                        onChange={(val) => updateItemRow(idx, 'product_id', val)}
+                                                                        placeholder="Search product name, description..."
+                                                                    />
                                                                     {itemProduct && (
                                                                         <div className="mt-2 p-2.5 bg-gray-50 rounded-lg border border-gray-200 space-y-1">
                                                                             <div className="font-bold text-gray-900 text-xs">{itemProduct.name}</div>

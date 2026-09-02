@@ -388,17 +388,47 @@ class SaleController extends Controller
         }
 
         DB::transaction(function () use ($request, $sale, $dokan) {
-            $saleIds = $request->input('sale_ids');
-            if (is_array($saleIds) && count($saleIds) > 0) {
-                $salesToDelete = Sale::where('dokan_id', $dokan->id)->whereIn('id', $saleIds)->get();
-            } else {
-                $salesToDelete = collect([$sale]);
+            $rawSaleIds = $request->input('sale_ids') ?? $request->query('sale_ids');
+
+            $salesToDelete = collect();
+            if ($rawSaleIds) {
+                $saleIds = is_array($rawSaleIds)
+                    ? $rawSaleIds
+                    : array_filter(explode(',', (string)$rawSaleIds));
+
+                if (count($saleIds) > 0) {
+                    $salesToDelete = Sale::where('dokan_id', $dokan->id)->whereIn('id', $saleIds)->get();
+                }
+            }
+
+            // Fallback: If no sale_ids array was passed or found, retrieve all sale items belonging to this invoice transaction
+            if ($salesToDelete->isEmpty()) {
+                $query = Sale::where('dokan_id', $dokan->id)
+                    ->where('sale_date', $sale->sale_date);
+
+                if ($sale->customer_id) {
+                    $query->where('customer_id', $sale->customer_id);
+                } else {
+                    $query->whereNull('customer_id');
+                }
+
+                if ($sale->created_at) {
+                    $query->whereRaw("DATE_FORMAT(created_at, '%Y-%m-%d %H:%i') = ?", [
+                        $sale->created_at->format('Y-m-d H:i')
+                    ]);
+                } else {
+                    $query->where('id', $sale->id);
+                }
+
+                $salesToDelete = $query->get();
             }
 
             foreach ($salesToDelete as $item) {
-                $product = Product::where('dokan_id', $dokan->id)->lockForUpdate()->find($item->product_id);
-                if ($product) {
-                    $product->increment('purchased_packets', $item->qty);
+                if ($item->product_id) {
+                    $product = Product::where('dokan_id', $dokan->id)->lockForUpdate()->find($item->product_id);
+                    if ($product) {
+                        $product->increment('purchased_packets', max(0, (int)$item->qty));
+                    }
                 }
                 $item->delete();
             }

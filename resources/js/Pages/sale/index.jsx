@@ -83,7 +83,8 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
             return;
         }
 
-        router.delete(route('sales.destroy', inv.first_sale_id), {
+        const saleIdsStr = Array.isArray(inv.sale_ids) ? inv.sale_ids.join(',') : inv.sale_ids;
+        router.delete(route('sales.destroy', { sale: inv.first_sale_id, sale_ids: saleIdsStr }), {
             data: { sale_ids: inv.sale_ids },
             onSuccess: () => {
                 toast.success('Sale invoice deleted and inventory stock restored');
@@ -323,7 +324,7 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
                 )}
             </Modal>
 
-            <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 py-6">
+            <div className="mx-auto w-full sm:px-6 lg:px-8 py-6">
                 {/* Stats Summary Cards */}
                 <div className={`grid grid-cols-1 ${isOwner ? 'md:grid-cols-4' : 'md:grid-cols-3'} gap-4 mb-6`}>
                     <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">

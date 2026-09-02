@@ -237,7 +237,7 @@ export default function InvestmentIndex({ investments, summary, filters }) {
                 </div>
             </Modal>
 
-            <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div className="mx-auto w-full sm:px-6 lg:px-8">
                 {/* Summary Stat Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                     <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 text-white rounded-xl p-5 shadow-sm">
@@ -282,7 +282,7 @@ export default function InvestmentIndex({ investments, summary, filters }) {
 
                 <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                     <div className="p-4 md:p-6 text-gray-900">
-                        <div className="mx-auto max-w-7xl">
+                        <div className="mx-auto w-full">
                             <div className="mt-2">
                                 <h2 className="text-2xl md:text-3xl font-serif text-gray-900 mb-4 md:m-5 font-bold">
                                     Capital Investments Directory

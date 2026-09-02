@@ -25,7 +25,7 @@ export default function Dashboard({ products, packetSizes = [], summary, filters
         dokan_id: current_dokan?.id,
         name: '',
         description: '',
-        purchased_packets: '',
+        purchased_packets: 1,
         packet_size: 1,
         cost_rate: '',
         selling_rate: '',
@@ -64,7 +64,7 @@ export default function Dashboard({ products, packetSizes = [], summary, filters
             dokan_id: current_dokan?.id,
             name: '',
             description: '',
-            purchased_packets: '',
+            purchased_packets: 1,
             packet_size: 1,
             cost_rate: '',
             selling_rate: '',
@@ -230,10 +230,10 @@ export default function Dashboard({ products, packetSizes = [], summary, filters
                     </form>
                 </div>
             </Modal>
-            <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div className="mx-auto w-full sm:px-6 lg:px-8">
                 <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                     <div className="p-4 md:p-6 text-gray-900">
-                        <div className="mx-auto max-w-7xl">
+                        <div className="mx-auto w-full">
                             <div>
                                 <div className="p-0 md:p-6 text-gray-900">
 

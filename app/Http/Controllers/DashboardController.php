@@ -36,7 +36,7 @@ class DashboardController extends Controller
         $lowStockCount = $lowStock->count();    
 
         $totalValue = Product::where('dokan_id', $dokanId)
-            ->sum(DB::raw('purchased_packets * packet_size * selling_rate'));
+            ->sum(DB::raw('purchased_packets * selling_rate'));
 
         return Inertia::render('Dashboard', [
             'totalProducts' => $totalProducts,
