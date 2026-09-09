@@ -120,13 +120,13 @@ export default function SupplierIndex({ suppliers, filters }) {
             <Head title="Suppliers" />
 
             {/* Modal for Add / Edit Supplier */}
-            <Modal show={showModal} onClose={() => setShowModal(false)}>
-                <div className="p-6 text-gray-900">
-                    <h2 className="text-xl font-bold text-gray-900 mb-4 border-b pb-2 flex items-center">
+            <Modal show={showModal} onClose={() => setShowModal(false)} maxWidth="md">
+                <div className="p-5 text-gray-900">
+                    <h2 className="text-lg font-bold text-gray-900 mb-3 border-b pb-2 flex items-center">
                         <FaTruck className="mr-2 text-indigo-600" />
                         {isEdit ? 'Edit Supplier' : 'Add New Supplier'}
                     </h2>
-                    <form className="flex flex-col gap-y-4" onSubmit={saveForm}>
+                    <form className="flex flex-col gap-y-3.5" onSubmit={saveForm}>
                         <Input
                             label="Supplier Contact Person Name"
                             name="name"
@@ -152,7 +152,7 @@ export default function SupplierIndex({ suppliers, filters }) {
                             addClass="w-full"
                         />
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <Input
                                 label="Phone Number (Optional)"
                                 name="phone"
@@ -179,13 +179,13 @@ export default function SupplierIndex({ suppliers, filters }) {
                         </div>
 
                         <div>
-                            <label htmlFor="address" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                            <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
                                 Office / Warehouse Address (Optional)
                             </label>
                             <textarea
                                 id="address"
                                 name="address"
-                                rows={3}
+                                rows={2}
                                 className="w-full rounded-md border-gray-300 text-sm shadow-xs focus:border-indigo-500 focus:ring-indigo-500"
                                 placeholder="Enter supplier address..."
                                 value={data.address}
@@ -196,7 +196,7 @@ export default function SupplierIndex({ suppliers, filters }) {
                             )}
                         </div>
 
-                        <div className="w-full mt-4 flex items-center justify-end gap-x-3">
+                        <div className="w-full mt-2 pt-3 border-t border-gray-100 flex items-center justify-end gap-x-2">
                             <SecondaryButton
                                 onClick={() => {
                                     setShowModal(false);

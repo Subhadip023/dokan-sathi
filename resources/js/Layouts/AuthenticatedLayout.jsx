@@ -124,11 +124,11 @@ export default function AuthenticatedLayout({ header, children }) {
     ];
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
+        <div className="min-h-screen md:h-screen md:overflow-hidden bg-gray-100 flex flex-col md:flex-row">
             <Toaster position="top-right" reverseOrder={false} />
 
             {/* Mobile Top Navbar Header */}
-            <div className="md:hidden bg-white text-gray-900 flex items-center justify-between px-4 py-3 border-b border-gray-200 sticky top-0 z-40 shadow-xs">
+            <div className="md:hidden h-16 bg-white text-gray-900 flex items-center justify-between px-4 border-b border-gray-200 sticky top-0 z-40">
                 <div className="flex items-center space-x-2">
                     <Link href="/">
                         <ApplicationLogo className="block h-8 w-auto fill-current text-indigo-600" />
@@ -156,20 +156,20 @@ export default function AuthenticatedLayout({ header, children }) {
 
             {/* Sidebar Navigation */}
             <aside
-                className={`fixed md:sticky top-0 inset-y-0 left-0 z-50 w-64 bg-white text-gray-700 flex flex-col justify-between transition-transform duration-300 ease-in-out h-screen border-r border-gray-200 shadow-sm ${
+                className={`fixed md:sticky top-0 inset-y-0 left-0 z-50 w-64 bg-white text-gray-700 flex flex-col justify-between transition-transform duration-300 ease-in-out h-screen border-r border-gray-200 shadow-sm shrink-0 ${
                     sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
                 }`}
             >
-                {/* Sidebar Header Brand */}
-                <div>
-                    <div className="p-5 border-b border-gray-200 flex items-center justify-between">
+                {/* Sidebar Header & Navigation */}
+                <div className="flex flex-col flex-1 min-h-0">
+                    <div className="h-16 px-5 border-b border-gray-200 flex items-center justify-between shrink-0">
                         <Link href="/" className="flex items-center space-x-3 group">
-                            <ApplicationLogo className="block h-9 w-auto fill-current text-indigo-600 group-hover:scale-105 transition-transform" />
-                            <div className="flex flex-col">
-                                <span className="font-extrabold text-gray-900 text-lg tracking-tight">
+                            <ApplicationLogo className="block h-8 w-auto fill-current text-indigo-600 group-hover:scale-105 transition-transform" />
+                            <div className="flex flex-col justify-center">
+                                <span className="font-extrabold text-gray-900 text-base tracking-tight leading-tight">
                                     Dokan Sathi
                                 </span>
-                                <span className="text-[11px] text-indigo-600 font-bold truncate max-w-[140px]">
+                                <span className="text-[11px] text-indigo-600 font-bold truncate max-w-[140px] leading-tight">
                                     {current_dokan?.name || 'Store POS'}
                                 </span>
                             </div>
@@ -185,7 +185,7 @@ export default function AuthenticatedLayout({ header, children }) {
 
                     {/* Store Title Badge */}
                     {current_dokan && (
-                        <div className="mx-4 mt-4 p-2.5 rounded-lg bg-indigo-50/60 border border-indigo-100 flex items-center space-x-2 text-xs">
+                        <div className="mx-4 mt-3 p-2.5 rounded-lg bg-indigo-50/60 border border-indigo-100 flex items-center space-x-2 text-xs shrink-0">
                             <span className="relative flex h-2 w-2">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -197,7 +197,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     )}
 
                     {/* Navigation Links List */}
-                    <nav className="mt-4 px-3 space-y-1 overflow-y-auto max-h-[calc(100vh-230px)]">
+                    <nav className="mt-3 px-3 space-y-1 overflow-y-auto flex-1 pb-4">
                         {navItems
                             .filter((item) => !item.ownerOnly || isOwner)
                             .map((item) => {
@@ -229,7 +229,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 </div>
 
                 {/* Sidebar Bottom Profile Footer */}
-                <div className="p-4 border-t border-gray-200 bg-gray-50/80">
+                <div className="p-4 border-t border-gray-200 bg-gray-50/80 shrink-0">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3 truncate mr-2">
                             <div className="h-9 w-9 rounded-full bg-indigo-100 border border-indigo-200 text-indigo-700 flex items-center justify-center font-bold text-sm">
@@ -264,16 +264,16 @@ export default function AuthenticatedLayout({ header, children }) {
             </aside>
 
             {/* Main Content Body */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
                 {/* Desktop Top Header Bar */}
-                <header className="hidden md:flex bg-white border-b border-gray-200 px-6 py-4 items-center justify-between shadow-xs">
+                <header className="hidden md:flex h-16 bg-white border-b border-gray-200 px-6 items-center justify-between shrink-0 sticky top-0 z-30">
                     <div>
                         {header ? (
-                            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight leading-none">
                                 {header}
                             </h1>
                         ) : (
-                            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight leading-none">
                                 {current_dokan?.name || 'Dashboard'}
                             </h1>
                         )}
@@ -281,8 +281,8 @@ export default function AuthenticatedLayout({ header, children }) {
 
                     <div className="flex items-center space-x-4">
                         <div className="text-right">
-                            <span className="text-xs text-gray-400 block uppercase font-bold">Store Active</span>
-                            <span className="text-sm font-bold text-gray-800">{current_dokan?.name || 'Store'}</span>
+                            <span className="text-[10px] text-gray-400 block uppercase font-bold leading-tight">Store Active</span>
+                            <span className="text-xs font-bold text-gray-800 leading-tight">{current_dokan?.name || 'Store'}</span>
                         </div>
                         <Dropdown>
                             <Dropdown.Trigger>
