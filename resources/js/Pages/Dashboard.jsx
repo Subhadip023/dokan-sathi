@@ -1,7 +1,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
+import SalesGraph from '@/Components/SalesGraph';
 
-export default function Dashboard({ totalProducts, lowStock, totalValue, lowStockProducts = [] }) {
+export default function Dashboard({ totalProducts, lowStock, totalValue, lowStockProducts = [], salesChartData = {} }) {
     const user = usePage().props.auth.user;
     const isOwner = (user?.role ?? 1) === 1;
 
@@ -28,6 +29,10 @@ export default function Dashboard({ totalProducts, lowStock, totalValue, lowStoc
                         </div>
                     </div>
 
+                    {/* Sales Performance Graph */}
+                    <div className="px-4 md:px-6 pt-2">
+                        <SalesGraph salesChartData={salesChartData} isOwner={isOwner} />
+                    </div>
 
                     <div className="mt-8 px-4 md:px-6">
                         <h2 className="text-2xl md:text-3xl font-serif text-gray-900 mb-4 font-bold">
