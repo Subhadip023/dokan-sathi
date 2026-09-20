@@ -321,7 +321,7 @@ export default function SalesGraph({ salesChartData = {}, isOwner = true }) {
             </div>
 
             {/* SVG Chart Area */}
-            <div className="relative w-full overflow-hidden">
+            <div className="relative w-full overflow-visible z-20">
                 {!hasData && (
                     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/70 backdrop-blur-[1px]">
                         <FaCalendarDay className="h-10 w-10 text-gray-300 mb-2" />
@@ -330,14 +330,17 @@ export default function SalesGraph({ salesChartData = {}, isOwner = true }) {
                     </div>
                 )}
 
-                <div className="w-full relative" style={{ touchAction: 'pan-y' }}>
+                <div
+                    className="w-full relative overflow-visible"
+                    style={{ touchAction: 'pan-y' }}
+                    onMouseMove={handleMouseMove}
+                    onMouseLeave={handleMouseLeave}
+                >
                     <svg
                         ref={svgRef}
                         viewBox="0 0 800 240"
                         preserveAspectRatio="none"
                         className="w-full h-56 md:h-72 select-none overflow-visible block"
-                        onMouseMove={handleMouseMove}
-                        onMouseLeave={handleMouseLeave}
                     >
                         <defs>
                             <linearGradient id={`areaGradient-${metric}`} x1="0" y1="0" x2="0" y2="1">
@@ -480,6 +483,7 @@ export default function SalesGraph({ salesChartData = {}, isOwner = true }) {
                                     width={width}
                                     height="240"
                                     fill="transparent"
+                                    style={{ pointerEvents: 'all' }}
                                     className="cursor-pointer"
                                     onMouseEnter={() => setHoveredIndex(i)}
                                     onTouchStart={() => setHoveredIndex(i)}
@@ -490,49 +494,72 @@ export default function SalesGraph({ salesChartData = {}, isOwner = true }) {
                 </div>
 
                 {/* Floating Tooltip Card */}
-                {activePoint && hasData && (
-                    <div
-                        className="absolute pointer-events-none z-30 transition-transform duration-75 ease-out"
-                        style={{
-                            left: `${(activePoint.x / 800) * 100}%`,
-                            top: `${(activePoint.y / 240) * 100}%`,
-                            transform: `translate(${
-                                hoveredIndex <= 1 ? '0%' : hoveredIndex >= points.length - 2 ? '-100%' : '-50%'
-                            }, -100%) translateY(-14px)`,
-                        }}
-                    >
-                        <div className="bg-gray-900/95 text-white p-3 rounded-lg shadow-xl backdrop-blur-sm border border-gray-700 min-w-[170px] text-xs">
-                            <div className="flex items-center justify-between border-b border-gray-700 pb-1.5 mb-2">
-                                <span className="font-semibold text-gray-300">{activePoint.data.label}</span>
-                                <span className="bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded text-[10px] font-mono">
-                                    {activePoint.data.invoices_count || 0} order{activePoint.data.invoices_count === 1 ? '' : 's'}
-                                </span>
-                            </div>
+                {activePoint && hasData && (() => {
+                    const xPercent = (activePoint.x / 800) * 100;
+                    const isNearLeft = xPercent < 20;
+                    const isNearRight = xPercent > 80;
+                    const xTranslate = isNearLeft ? '0%' : isNearRight ? '-100%' : '-50%';
+                    const isNearTop = activePoint.y < 110;
+                    const yTranslate = isNearTop ? '0%' : '-100%';
+                    const yOffset = isNearTop ? '16px' : '-16px';
 
-                            <div className="space-y-1 font-mono">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-gray-400 text-[11px]">Revenue:</span>
-                                    <span className="font-bold text-emerald-400">₹{activePoint.data.revenue.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-gray-400 text-[11px]">Packets Sold:</span>
-                                    <span className="text-indigo-300 font-bold">
-                                        {activePoint.data.packets} pkts
-                                        {activePoint.data.pieces > activePoint.data.packets && (
-                                            <span className="text-gray-400 text-[10px] ml-1">({activePoint.data.pieces} pcs)</span>
-                                        )}
+                    return (
+                        <div
+                            className="absolute pointer-events-none z-50 transition-all duration-75 ease-out"
+                            style={{
+                                left: `${xPercent}%`,
+                                top: `${(activePoint.y / 240) * 100}%`,
+                                transform: `translate(${xTranslate}, ${yTranslate}) translateY(${yOffset})`,
+                            }}
+                        >
+                            <div className="relative bg-gray-900/95 text-white p-3 rounded-lg shadow-2xl backdrop-blur-sm border border-gray-700 min-w-[170px] text-xs">
+                                {/* Caret pointing to the point */}
+                                <div
+                                    className={`absolute w-0 h-0 border-solid border-[6px] ${
+                                        isNearTop
+                                            ? '-top-3 border-x-transparent border-t-transparent border-b-gray-900'
+                                            : '-bottom-3 border-x-transparent border-b-transparent border-t-gray-900'
+                                    } ${
+                                        isNearLeft
+                                            ? 'left-4'
+                                            : isNearRight
+                                            ? 'right-4'
+                                            : 'left-1/2 -translate-x-1/2'
+                                    }`}
+                                />
+
+                                <div className="flex items-center justify-between border-b border-gray-700 pb-1.5 mb-2">
+                                    <span className="font-semibold text-gray-300">{activePoint.data.label}</span>
+                                    <span className="bg-gray-800 text-gray-300 px-1.5 py-0.5 rounded text-[10px] font-mono">
+                                        {activePoint.data.invoices_count || 0} order{activePoint.data.invoices_count === 1 ? '' : 's'}
                                     </span>
                                 </div>
-                                {isOwner && activePoint.data.profit !== null && activePoint.data.profit !== undefined && (
-                                    <div className="flex justify-between items-center pt-1 border-t border-gray-800">
-                                        <span className="text-gray-400 text-[11px]">Profit:</span>
-                                        <span className="font-bold text-purple-400">₹{activePoint.data.profit.toLocaleString()}</span>
+
+                                <div className="space-y-1 font-mono">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-400 text-[11px]">Revenue:</span>
+                                        <span className="font-bold text-emerald-400">₹{activePoint.data.revenue.toLocaleString()}</span>
                                     </div>
-                                )}
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-400 text-[11px]">Packets Sold:</span>
+                                        <span className="text-indigo-300 font-bold">
+                                            {activePoint.data.packets} pkts
+                                            {activePoint.data.pieces > activePoint.data.packets && (
+                                                <span className="text-gray-400 text-[10px] ml-1">({activePoint.data.pieces} pcs)</span>
+                                            )}
+                                        </span>
+                                    </div>
+                                    {isOwner && activePoint.data.profit !== null && activePoint.data.profit !== undefined && (
+                                        <div className="flex justify-between items-center pt-1 border-t border-gray-800">
+                                            <span className="text-gray-400 text-[11px]">Profit:</span>
+                                            <span className="font-bold text-purple-400">₹{activePoint.data.profit.toLocaleString()}</span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
             </div>
         </div>
     );
