@@ -154,17 +154,20 @@ export default function SalesGraph({ salesChartData = {}, isOwner = true }) {
     const handleMouseMove = (e) => {
         if (!svgRef.current || points.length === 0) return;
         const rect = svgRef.current.getBoundingClientRect();
-        const mouseX = ((e.clientX - rect.left) / rect.width) * 800;
+        if (rect.width <= 0) return;
+
+        const fraction = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        const mouseX = fraction * 800;
 
         let closestIdx = 0;
         let minDiff = Infinity;
-        points.forEach((pt, i) => {
-            const diff = Math.abs(pt.x - mouseX);
+        for (let i = 0; i < points.length; i++) {
+            const diff = Math.abs(points[i].x - mouseX);
             if (diff < minDiff) {
                 minDiff = diff;
                 closestIdx = i;
             }
-        });
+        }
         setHoveredIndex(closestIdx);
     };
 
@@ -327,11 +330,12 @@ export default function SalesGraph({ salesChartData = {}, isOwner = true }) {
                     </div>
                 )}
 
-                <div className="w-full" style={{ touchAction: 'pan-y' }}>
+                <div className="w-full relative" style={{ touchAction: 'pan-y' }}>
                     <svg
                         ref={svgRef}
                         viewBox="0 0 800 240"
-                        className="w-full h-56 md:h-72 select-none overflow-visible"
+                        preserveAspectRatio="none"
+                        className="w-full h-56 md:h-72 select-none overflow-visible block"
                         onMouseMove={handleMouseMove}
                         onMouseLeave={handleMouseLeave}
                     >
@@ -340,15 +344,11 @@ export default function SalesGraph({ salesChartData = {}, isOwner = true }) {
                                 <stop offset="0%" stopColor={colorScheme.gradientStart} />
                                 <stop offset="100%" stopColor={colorScheme.gradientEnd} />
                             </linearGradient>
-                            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                                <feGaussianBlur stdDeviation="3" result="glow" />
-                                <feComposite in="SourceGraphic" in2="glow" operator="over" />
-                            </filter>
                         </defs>
 
                         {/* Horizontal Gridlines & Y-Axis Labels */}
                         {yTicks.map((tick, i) => (
-                            <g key={i}>
+                            <g key={i} className="pointer-events-none">
                                 <line
                                     x1="40"
                                     y1={tick.y}
@@ -374,14 +374,14 @@ export default function SalesGraph({ salesChartData = {}, isOwner = true }) {
                         ))}
 
                         {/* Baseline */}
-                        <line x1="40" y1="205" x2="760" y2="205" stroke="#e2e8f0" strokeWidth="1" />
+                        <line x1="40" y1="205" x2="760" y2="205" stroke="#e2e8f0" strokeWidth="1" className="pointer-events-none" />
 
                         {/* Area Polygon */}
                         {hasData && (
                             <path
                                 d={areaPath}
                                 fill={`url(#areaGradient-${metric})`}
-                                className="transition-all duration-300 ease-out"
+                                className="transition-all duration-300 ease-out pointer-events-none"
                             />
                         )}
 
@@ -394,22 +394,36 @@ export default function SalesGraph({ salesChartData = {}, isOwner = true }) {
                                 strokeWidth="2.5"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                className="transition-all duration-300 ease-out"
+                                className="transition-all duration-300 ease-out pointer-events-none"
                             />
                         )}
 
+                        {/* Subtle Static Dot Markers along curve */}
+                        {hasData && points.map((pt, i) => {
+                            if (range === '30days' && i % 2 !== 0 && i !== points.length - 1) return null;
+                            return (
+                                <circle
+                                    key={i}
+                                    cx={pt.x}
+                                    cy={pt.y}
+                                    r="2.5"
+                                    fill={colorScheme.primary}
+                                    className="pointer-events-none opacity-60"
+                                />
+                            );
+                        })}
+
                         {/* Hover Guideline & Indicator */}
                         {activePoint && hasData && (
-                            <g>
+                            <g className="pointer-events-none">
                                 <line
                                     x1={activePoint.x}
-                                    y1="30"
+                                    y1="25"
                                     x2={activePoint.x}
                                     y2="205"
                                     stroke={colorScheme.primary}
                                     strokeWidth="1.5"
                                     strokeDasharray="3 3"
-                                    className="transition-all"
                                 />
                                 {/* Outer Glow Circle */}
                                 <circle
@@ -418,7 +432,6 @@ export default function SalesGraph({ salesChartData = {}, isOwner = true }) {
                                     r="8"
                                     fill={colorScheme.primary}
                                     fillOpacity="0.25"
-                                    className="animate-ping"
                                 />
                                 {/* Solid Circle */}
                                 <circle
@@ -434,7 +447,6 @@ export default function SalesGraph({ salesChartData = {}, isOwner = true }) {
 
                         {/* X-Axis Date Labels */}
                         {points.map((pt, i) => {
-                            // Only show every Nth label to prevent clutter on 30-day view
                             const step = range === '30days' ? 5 : range === '7days' ? 1 : 2;
                             const isEdge = i === 0 || i === points.length - 1;
                             const shouldShow = i % step === 0 || isEdge;
@@ -447,10 +459,31 @@ export default function SalesGraph({ salesChartData = {}, isOwner = true }) {
                                     x={pt.x}
                                     y="225"
                                     textAnchor="middle"
-                                    className="text-[10px] font-medium fill-gray-400 select-none"
+                                    className="text-[10px] font-medium fill-gray-400 select-none pointer-events-none"
                                 >
-                                    {range === '12months' ? pt.data.short_label : pt.data.short_label}
+                                    {pt.data.short_label}
                                 </text>
+                            );
+                        })}
+
+                        {/* Transparent Hit Zone Columns for every point */}
+                        {hasData && points.map((pt, i) => {
+                            const prevX = i > 0 ? (points[i - 1].x + pt.x) / 2 : 0;
+                            const nextX = i < points.length - 1 ? (pt.x + points[i + 1].x) / 2 : 800;
+                            const width = Math.max(1, nextX - prevX);
+
+                            return (
+                                <rect
+                                    key={`hit-${i}`}
+                                    x={prevX}
+                                    y="0"
+                                    width={width}
+                                    height="240"
+                                    fill="transparent"
+                                    className="cursor-pointer"
+                                    onMouseEnter={() => setHoveredIndex(i)}
+                                    onTouchStart={() => setHoveredIndex(i)}
+                                />
                             );
                         })}
                     </svg>
@@ -459,10 +492,13 @@ export default function SalesGraph({ salesChartData = {}, isOwner = true }) {
                 {/* Floating Tooltip Card */}
                 {activePoint && hasData && (
                     <div
-                        className="absolute pointer-events-none z-20 transition-all duration-150 transform -translate-x-1/2 -translate-y-full mb-3"
+                        className="absolute pointer-events-none z-30 transition-transform duration-75 ease-out"
                         style={{
                             left: `${(activePoint.x / 800) * 100}%`,
-                            top: `${Math.max(10, (activePoint.y / 240) * 100)}%`,
+                            top: `${(activePoint.y / 240) * 100}%`,
+                            transform: `translate(${
+                                hoveredIndex <= 1 ? '0%' : hoveredIndex >= points.length - 2 ? '-100%' : '-50%'
+                            }, -100%) translateY(-14px)`,
                         }}
                     >
                         <div className="bg-gray-900/95 text-white p-3 rounded-lg shadow-xl backdrop-blur-sm border border-gray-700 min-w-[170px] text-xs">
