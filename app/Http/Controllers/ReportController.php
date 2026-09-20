@@ -53,7 +53,12 @@ class ReportController extends Controller
             $first = $group->first();
             $productName = $first->product ? $first->product->name : 'Unknown Product';
             $productDesc = $first->product ? $first->product->description : null;
+            $packetSize = (int) ($first->packet_size ?? ($first->product ? $first->product->packet_size : 1));
+            if ($packetSize <= 0) {
+                $packetSize = 1;
+            }
             $packetsSold = $group->sum('qty');
+            $totalPieces = $packetsSold * $packetSize;
             $revenue = $group->sum(fn($s) => $s->total_amount);
             $cost = $group->sum(fn($s) => $s->qty * $s->cost_rate);
             $profit = $revenue - $cost;
@@ -63,7 +68,9 @@ class ReportController extends Controller
                 'product_name' => $productName,
                 'product_description' => $productDesc,
                 'description' => $productDesc,
+                'packet_size' => $packetSize,
                 'packets_sold' => $packetsSold,
+                'total_pieces' => $totalPieces,
                 'revenue' => round($revenue, 2),
                 'cost' => round($cost, 2),
                 'profit' => round($profit, 2),

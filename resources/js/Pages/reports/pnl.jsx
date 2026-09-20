@@ -239,6 +239,7 @@ export default function PnLReport({ filters, summary, productPerformance, overhe
                                     <tr className="bg-gray-100 text-xs font-medium text-gray-900 uppercase">
                                         <th className="py-3 px-4">#</th>
                                         <th className="py-3 px-4">Product Name & Description</th>
+                                        <th className="py-3 px-4 text-center">Packet Size</th>
                                         <th className="py-3 px-4 text-right">Packets Sold</th>
                                         <th className="py-3 px-4 text-right">Revenue (₹)</th>
                                         <th className="py-3 px-4 text-right">Cost (₹)</th>
@@ -258,7 +259,19 @@ export default function PnLReport({ filters, summary, productPerformance, overhe
                                                     </span>
                                                 )}
                                             </td>
-                                            <td className="py-3 px-4 text-right font-mono text-gray-800">{p.packets_sold} pkts</td>
+                                            <td className="py-3 px-4 text-center font-mono text-xs text-gray-700">
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                                    {p.packet_size} pcs
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-4 text-right font-mono text-gray-800">
+                                                <div>{p.packets_sold} pkts</div>
+                                                {p.packet_size > 1 && (
+                                                    <div className="text-[11px] text-gray-400 font-normal">
+                                                        ({p.total_pieces || (p.packets_sold * p.packet_size)} pcs)
+                                                    </div>
+                                                )}
+                                            </td>
                                             <td className="py-3 px-4 text-right font-mono font-semibold text-emerald-700">₹{p.revenue.toLocaleString()}</td>
                                             <td className="py-3 px-4 text-right font-mono text-gray-600">₹{p.cost.toLocaleString()}</td>
                                             <td className="py-3 px-4 text-right font-mono font-bold text-indigo-600">₹{p.profit.toLocaleString()}</td>
@@ -270,6 +283,19 @@ export default function PnLReport({ filters, summary, productPerformance, overhe
                                         </tr>
                                     ))}
                                 </tbody>
+                                <tfoot className="bg-gray-50 font-bold border-t-2 border-gray-200 text-xs text-gray-700">
+                                    <tr>
+                                        <td colSpan="2" className="py-3.5 px-4 text-right uppercase tracking-wider">Total:</td>
+                                        <td className="py-3.5 px-4 text-center font-mono text-gray-400">-</td>
+                                        <td className="py-3.5 px-4 text-right font-mono text-gray-900">
+                                            {productPerformance.reduce((sum, p) => sum + (p.packets_sold || 0), 0)} pkts
+                                        </td>
+                                        <td className="py-3.5 px-4 text-right font-mono text-emerald-700">₹{summary.totalRevenue.toLocaleString()}</td>
+                                        <td className="py-3.5 px-4 text-right font-mono text-gray-600">₹{summary.totalCogs.toLocaleString()}</td>
+                                        <td className="py-3.5 px-4 text-right font-mono text-indigo-700">₹{summary.grossProfit.toLocaleString()}</td>
+                                        <td className="py-3.5 px-4 text-right font-mono">{summary.grossMargin}%</td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         )}
                     </div>
