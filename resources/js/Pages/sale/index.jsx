@@ -580,6 +580,44 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
                                                 );
                                             })}
                                         </tbody>
+                                        {summary && (
+                                            <tfoot className="bg-gray-100 font-bold border-t-2 border-gray-300 text-sm">
+                                                <tr>
+                                                    <td colSpan="5" className="px-4 py-3.5 text-right uppercase text-xs tracking-wider text-gray-700">
+                                                        <div>
+                                                            {search ? `Total for "${search}":` : 'Total Sales & Valuation:'}
+                                                        </div>
+                                                        {(summary.tableTotalPaid > 0 || summary.tableTotalDue > 0) && (
+                                                            <div className="text-[11px] text-gray-500 font-normal normal-case mt-0.5">
+                                                                Collected: <strong className="text-emerald-700 font-mono">₹{Number(summary.tableTotalPaid || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                                                                {summary.tableTotalDue > 0 && (
+                                                                    <> • Due: <strong className="text-red-600 font-mono">₹{Number(summary.tableTotalDue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-4 py-3.5 text-center font-mono font-bold text-indigo-700 text-xs">
+                                                        {summary.tableTotalPackets ?? summary.totalPackets ?? 0} pkts
+                                                        <span className="block text-[10px] text-gray-500 font-sans font-normal">
+                                                            ({summary.tableTotalPieces ?? summary.totalPieces ?? 0} pcs)
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3.5 text-right font-mono font-extrabold text-emerald-700">
+                                                        ₹{Number(summary.tableTotalAmount ?? summary.totalRevenue ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                    </td>
+                                                    {isOwner && (
+                                                        <td className="px-4 py-3.5 text-right font-mono font-bold text-indigo-700">
+                                                            {summary.tableTotalProfit !== null && summary.tableTotalProfit !== undefined
+                                                                ? `₹${Number(summary.tableTotalProfit).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                                : summary.totalProfit !== null && summary.totalProfit !== undefined
+                                                                    ? `₹${Number(summary.totalProfit).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                                    : '₹0.00'}
+                                                        </td>
+                                                    )}
+                                                    <td className="px-4 py-3.5 text-center text-gray-400 font-mono text-xs">-</td>
+                                                </tr>
+                                            </tfoot>
+                                        )}
                                     </table>
                                 </div>
 

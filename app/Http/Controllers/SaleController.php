@@ -147,6 +147,15 @@ class SaleController extends Controller
         $totalProfit = $isEmployee ? null : $allSales->sum(fn($s) => $s->profit);
         $totalInvoices = $invoices->count();
 
+        // Table totals based on current filtered/searched invoices
+        $tableTotalPackets = $invoices->sum('total_packets');
+        $tableTotalPieces = $invoices->sum('total_pieces');
+        $tableTotalAmount = $invoices->sum('total_amount');
+        $tableTotalPaid = $invoices->sum('paid_amount');
+        $tableTotalDue = $invoices->sum('due_amount');
+        $tableTotalProfit = $isEmployee ? null : $invoices->sum('total_profit');
+        $tableTotalInvoices = $invoices->count();
+
         if ($isEmployee) {
             $paginatedInvoices->getCollection()->transform(function ($inv) {
                 unset($inv['total_profit']);
@@ -170,6 +179,15 @@ class SaleController extends Controller
                 'totalOutstandingDue' => round($totalOutstandingDue, 2),
                 'totalProfit' => $isEmployee ? null : round($totalProfit, 2),
                 'totalInvoices' => $totalInvoices,
+                'totalPackets' => $tableTotalPackets,
+                'totalPieces' => $tableTotalPieces,
+                'tableTotalAmount' => round($tableTotalAmount, 2),
+                'tableTotalPaid' => round($tableTotalPaid, 2),
+                'tableTotalDue' => round($tableTotalDue, 2),
+                'tableTotalProfit' => $isEmployee ? null : round($tableTotalProfit, 2),
+                'tableTotalPackets' => $tableTotalPackets,
+                'tableTotalPieces' => $tableTotalPieces,
+                'tableTotalInvoices' => $tableTotalInvoices,
             ],
             'products' => $products,
             'customers' => $customers,

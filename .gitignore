@@ -22,4 +22,4 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
-/public/build
+# /public/build
