@@ -52,6 +52,7 @@ class ReportController extends Controller
         $productPerformance = $sales->groupBy('product_id')->map(function ($group) {
             $first = $group->first();
             $productName = $first->product ? $first->product->name : 'Unknown Product';
+            $productDesc = $first->product ? $first->product->description : null;
             $packetsSold = $group->sum('qty');
             $revenue = $group->sum(fn($s) => $s->total_amount);
             $cost = $group->sum(fn($s) => $s->qty * $s->cost_rate);
@@ -60,13 +61,15 @@ class ReportController extends Controller
 
             return [
                 'product_name' => $productName,
+                'product_description' => $productDesc,
+                'description' => $productDesc,
                 'packets_sold' => $packetsSold,
                 'revenue' => round($revenue, 2),
                 'cost' => round($cost, 2),
                 'profit' => round($profit, 2),
                 'margin' => $margin,
             ];
-        })->values();
+        })->sortByDesc('profit')->values();
 
         return Inertia::render('reports/pnl', [
             'filters' => [

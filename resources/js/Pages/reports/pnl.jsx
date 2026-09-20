@@ -238,7 +238,7 @@ export default function PnLReport({ filters, summary, productPerformance, overhe
                                 <thead>
                                     <tr className="bg-gray-100 text-xs font-medium text-gray-900 uppercase">
                                         <th className="py-3 px-4">#</th>
-                                        <th className="py-3 px-4">Product Name</th>
+                                        <th className="py-3 px-4">Product Name & Description</th>
                                         <th className="py-3 px-4 text-right">Packets Sold</th>
                                         <th className="py-3 px-4 text-right">Revenue (₹)</th>
                                         <th className="py-3 px-4 text-right">Cost (₹)</th>
@@ -250,7 +250,14 @@ export default function PnLReport({ filters, summary, productPerformance, overhe
                                     {productPerformance.map((p, idx) => (
                                         <tr key={idx} className="hover:bg-gray-50 transition-colors">
                                             <td className="py-3 px-4 text-xs font-mono text-gray-400">{idx + 1}</td>
-                                            <td className="py-3 px-4 font-semibold text-gray-900">{p.product_name}</td>
+                                            <td className="py-3 px-4">
+                                                <span className="font-semibold text-gray-900 block">{p.product_name}</span>
+                                                {(p.product_description || p.description) && (
+                                                    <span className="text-xs text-gray-500 italic block mt-0.5 max-w-xs truncate" title={p.product_description || p.description}>
+                                                        {p.product_description || p.description}
+                                                    </span>
+                                                )}
+                                            </td>
                                             <td className="py-3 px-4 text-right font-mono text-gray-800">{p.packets_sold} pkts</td>
                                             <td className="py-3 px-4 text-right font-mono font-semibold text-emerald-700">₹{p.revenue.toLocaleString()}</td>
                                             <td className="py-3 px-4 text-right font-mono text-gray-600">₹{p.cost.toLocaleString()}</td>
