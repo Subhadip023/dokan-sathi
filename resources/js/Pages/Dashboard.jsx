@@ -1,7 +1,10 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 
-export default function Dashboard({ totalProducts, lowStock, totalValue, lowStockProducts }) {
+export default function Dashboard({ totalProducts, lowStock, totalValue, lowStockProducts = [] }) {
+    const user = usePage().props.auth.user;
+    const isOwner = (user?.role ?? 1) === 1;
+
     return (
         <AuthenticatedLayout header={'Dashboard'} >
             <Head title="Dashboard" />
@@ -37,22 +40,37 @@ export default function Dashboard({ totalProducts, lowStock, totalValue, lowStoc
                                 <thead>
                                     <tr>
                                         <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tl rounded-bl">#</th>
-                                        <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Name</th>
-                                        <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Cost Rate</th>
+                                        <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Name & Description</th>
+                                        {isOwner && <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Cost Rate</th>}
                                         <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Selling Rate</th>
                                         <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 rounded-tr rounded-br">Packets</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {lowStockProducts.map((product, index) => (
-                                        <tr key={product.id} className={`border-b bg-white hover:bg-gray-100 ${product.purchased_packets <= product.reorder_level ? 'bg-red-100 text-red-500' : ''}`}>
-                                            <td className="px-4 py-3">{index + 1}</td>
-                                            <td className="px-4 py-3">{product.name}</td>
-                                            <td className="px-4 py-3">₹{product.cost_rate}</td>
-                                            <td className="px-4 py-3">₹{product.selling_rate}</td>
-                                            <td className="px-4 py-3">{product.purchased_packets}</td>
+                                    {lowStockProducts && lowStockProducts.length > 0 ? (
+                                        lowStockProducts.map((product, index) => (
+                                            <tr key={product.id} className={`border-b bg-white hover:bg-gray-100 ${product.purchased_packets <= product.reorder_level ? 'bg-red-50 text-red-600' : ''}`}>
+                                                <td className="px-4 py-3">{index + 1}</td>
+                                                <td className="px-4 py-3">
+                                                    <span className="font-semibold text-gray-900 block">{product.name}</span>
+                                                    {product.description && (
+                                                        <span className="text-xs text-gray-500 italic block mt-0.5 max-w-xs truncate" title={product.description}>
+                                                            {product.description}
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                {isOwner && <td className="px-4 py-3">₹{product.cost_rate}</td>}
+                                                <td className="px-4 py-3">₹{product.selling_rate}</td>
+                                                <td className="px-4 py-3">{product.purchased_packets}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={isOwner ? 5 : 4} className="px-4 py-6 text-center text-gray-500">
+                                                No low stock products found.
+                                            </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>

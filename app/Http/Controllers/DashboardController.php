@@ -15,7 +15,10 @@ class DashboardController extends Controller
      */
     public function __invoke(Request $request)
     {
-        $dokan = $request->user()->currentDokan();
+        $user = $request->user();
+        $isEmployee = $user->isEmployee();
+
+        $dokan = $user->currentDokan();
         $dokanId = $dokan?->id;
 
         if (!$dokanId) {
@@ -31,7 +34,16 @@ class DashboardController extends Controller
 
         $lowStock = Product::where('dokan_id', $dokanId)
             ->whereColumn('purchased_packets', '<=', 'reorder_level')
+            ->latest()
             ->get();
+
+        if ($isEmployee) {
+            $lowStock->transform(function ($product) {
+                unset($product->cost_rate);
+
+                return $product;
+            });
+        }
 
         $lowStockCount = $lowStock->count();    
 
