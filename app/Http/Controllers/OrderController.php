@@ -71,6 +71,23 @@ class OrderController extends Controller
     }
 
     /**
+     * Show the form for creating a new purchase order.
+     */
+    public function create(Request $request): Response
+    {
+        $dokan = $request->user()->currentDokan();
+        $dokanId = $dokan?->id;
+
+        $suppliers = Supplier::where('dokan_id', $dokanId)->get(['id', 'name', 'company_name', 'phone']);
+        $products = Product::where('dokan_id', $dokanId)->get(['id', 'name', 'description', 'cost_rate', 'selling_rate', 'purchased_packets', 'packet_size']);
+
+        return Inertia::render('order/create', [
+            'suppliers' => $suppliers,
+            'products' => $products,
+        ]);
+    }
+
+    /**
      * Store a newly created purchase order.
      */
     public function store(StoreOrderRequest $request)
@@ -170,6 +187,28 @@ class OrderController extends Controller
         });
 
         return redirect()->route('orders.index')->with('success', 'Purchase order created and product catalog updated.');
+    }
+
+    /**
+     * Show the form for editing the specified purchase order.
+     */
+    public function edit(Request $request, Order $order): Response
+    {
+        $dokan = $request->user()->currentDokan();
+        if (!$dokan || $order->dokan_id !== $dokan->id) {
+            abort(403);
+        }
+
+        $order->load(['items.product', 'supplier']);
+        $suppliers = Supplier::where('dokan_id', $dokan->id)->get(['id', 'name', 'company_name', 'phone']);
+        $products = Product::where('dokan_id', $dokan->id)->get(['id', 'name', 'description', 'cost_rate', 'selling_rate', 'purchased_packets', 'packet_size']);
+
+        return Inertia::render('order/create', [
+            'order' => $order,
+            'isEdit' => true,
+            'suppliers' => $suppliers,
+            'products' => $products,
+        ]);
     }
 
     /**
