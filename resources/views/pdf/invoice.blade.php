@@ -5,8 +5,11 @@
   <title>Invoice #INV-{{ sprintf('%05d', $firstSale->id) }} - {{ $dokan->name }}</title>
   <style>
     @page {
-      size: A4;
-      margin: 24px 30px;
+      size: {{ ($copies ?? 1) === 2 ? 'A4 portrait' : 'A5 portrait' }};
+      margin: {{ ($copies ?? 1) === 2 ? '8mm 12mm' : '8mm 10mm' }};
+    }
+    * {
+      box-sizing: border-box;
     }
     body {
       font-family: 'DejaVu Sans', sans-serif;
@@ -14,67 +17,104 @@
       padding: 0;
       color: #1e293b;
       background: #ffffff;
-      font-size: 10.5px;
-      line-height: 1.4;
+      font-size: {{ ($copies ?? 1) === 2 ? '8px' : '9.5px' }};
+      line-height: 1.3;
     }
     
+    .invoice-container {
+      width: 100%;
+    }
+
+    .cut-divider {
+      width: 100%;
+      text-align: center;
+      margin: 10px 0;
+      border-top: 1px dashed #94a3b8;
+      position: relative;
+    }
+    .cut-badge {
+      display: inline-block;
+      position: relative;
+      top: -7px;
+      background: #ffffff;
+      padding: 0 10px;
+      font-size: 7.5px;
+      font-weight: bold;
+      color: #64748b;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
     /* Header */
     .header-table {
       width: 100%;
       border-collapse: collapse;
-      border-bottom: 2px solid #0f172a;
-      padding-bottom: 8px;
-      margin-bottom: 12px;
+      border-bottom: 1.5px solid #0f172a;
+      padding-bottom: 4px;
+      margin-bottom: 5px;
     }
     .memo-tag {
-      font-size: 8.5px;
+      font-size: {{ ($copies ?? 1) === 2 ? '7px' : '8px' }};
       font-weight: bold;
-      letter-spacing: 1.5px;
-      color: #64748b;
+      letter-spacing: 1px;
+      color: #4338ca;
       text-transform: uppercase;
-      margin-bottom: 2px;
+      margin-bottom: 1px;
+    }
+    .copy-pill {
+      display: inline-block;
+      background-color: #e0e7ff;
+      color: #3730a3;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: {{ ($copies ?? 1) === 2 ? '6.5px' : '7.5px' }};
+      font-weight: bold;
+      margin-left: 4px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
     .store-name {
-      font-size: 20px;
+      font-size: {{ ($copies ?? 1) === 2 ? '13px' : '16px' }};
       font-weight: bold;
       color: #0f172a;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin: 0;
+      line-height: 1.1;
     }
     .store-desc {
-      font-size: 9.5px;
+      font-size: {{ ($copies ?? 1) === 2 ? '7px' : '8px' }};
       color: #475569;
-      margin: 2px 0;
+      margin: 1px 0;
     }
     .store-meta {
-      font-size: 9px;
+      font-size: {{ ($copies ?? 1) === 2 ? '6.5px' : '7.5px' }};
       color: #334155;
-      margin-top: 4px;
-      line-height: 1.4;
+      margin-top: 2px;
+      line-height: 1.25;
     }
 
     /* Info Table */
     .info-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 14px;
+      margin-bottom: 5px;
     }
     .info-table td {
       vertical-align: top;
-      font-size: 10px;
-      line-height: 1.45;
+      font-size: {{ ($copies ?? 1) === 2 ? '7.5px' : '8.5px' }};
+      line-height: 1.3;
     }
     .info-block-title {
-      font-size: 8.5px;
+      font-size: {{ ($copies ?? 1) === 2 ? '6.5px' : '7.5px' }};
       font-weight: bold;
       text-transform: uppercase;
       color: #64748b;
       letter-spacing: 0.5px;
-      margin-bottom: 3px;
+      margin-bottom: 1px;
     }
     .party-name {
-      font-size: 12px;
+      font-size: {{ ($copies ?? 1) === 2 ? '9px' : '10.5px' }};
       font-weight: bold;
       color: #0f172a;
     }
@@ -83,23 +123,23 @@
     .items-table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 6px;
+      margin-top: 3px;
     }
     .items-table th {
       background-color: #0f172a;
       color: #ffffff;
-      font-size: 9.5px;
+      font-size: {{ ($copies ?? 1) === 2 ? '7px' : '8px' }};
       font-weight: bold;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      padding: 6px 8px;
+      padding: {{ ($copies ?? 1) === 2 ? '3px 4px' : '4px 6px' }};
       border: 1px solid #0f172a;
     }
     .items-table td {
       border: 1px solid #cbd5e1;
-      padding: 6px 8px;
+      padding: {{ ($copies ?? 1) === 2 ? '3px 4px' : '4px 6px' }};
       vertical-align: middle;
-      font-size: 10px;
+      font-size: {{ ($copies ?? 1) === 2 ? '7px' : '8px' }};
     }
     .items-table tr:nth-child(even) td {
       background-color: #f8fafc;
@@ -115,7 +155,7 @@
       color: #0f172a;
     }
     .product-sub {
-      font-size: 8.5px;
+      font-size: {{ ($copies ?? 1) === 2 ? '6px' : '7px' }};
       color: #64748b;
       margin-top: 1px;
     }
@@ -123,52 +163,48 @@
     /* Totals */
     .calc-row td {
       border: 1px solid #cbd5e1;
-      padding: 5px 8px;
+      padding: {{ ($copies ?? 1) === 2 ? '2px 4px' : '3px 6px' }};
       background-color: #ffffff !important;
     }
     .grand-total-row td {
       border: 1px solid #0f172a;
       background-color: #f1f5f9 !important;
-      font-size: 11px;
+      font-size: {{ ($copies ?? 1) === 2 ? '8px' : '9.5px' }};
       font-weight: bold;
       color: #0f172a;
-      padding: 7px 8px;
+      padding: {{ ($copies ?? 1) === 2 ? '3px 4px' : '4px 6px' }};
     }
 
     /* In Words Banner */
     .words-banner {
-      margin-top: 10px;
-      padding: 6px 10px;
+      margin-top: 3px;
+      padding: {{ ($copies ?? 1) === 2 ? '2.5px 5px' : '3px 6px' }};
       background-color: #f8fafc;
-      border-left: 3px solid #0f172a;
-      font-size: 9.5px;
+      border-left: 2px solid #0f172a;
+      font-size: {{ ($copies ?? 1) === 2 ? '6.5px' : '7.5px' }};
     }
 
     /* Footer & Signatures */
     .footer-table {
       width: 100%;
-      margin-top: 28px;
+      margin-top: {{ ($copies ?? 1) === 2 ? '5px' : '10px' }};
       border-collapse: collapse;
       page-break-inside: avoid;
     }
     .footer-table td {
       vertical-align: bottom;
-      font-size: 9.5px;
+      font-size: {{ ($copies ?? 1) === 2 ? '6.5px' : '7.5px' }};
     }
     .terms-box {
-      font-size: 8.5px;
+      font-size: {{ ($copies ?? 1) === 2 ? '6px' : '7px' }};
       color: #64748b;
-      line-height: 1.4;
-    }
-    .sig-box {
-      text-align: center;
-      width: 180px;
+      line-height: 1.25;
     }
     .sig-line {
       border-top: 1px dashed #94a3b8;
-      margin-top: 45px;
-      padding-top: 4px;
-      font-size: 9px;
+      margin-top: {{ ($copies ?? 1) === 2 ? '15px' : '24px' }};
+      padding-top: 2px;
+      font-size: {{ ($copies ?? 1) === 2 ? '6.5px' : '7.5px' }};
       font-weight: bold;
       color: #334155;
     }
@@ -199,7 +235,6 @@
             $digits = ['', 'Hundred', 'Thousand', 'Lakh', 'Crore'];
             $no = floor($number);
             $point = round($number - $no, 2) * 100;
-            $hundred = null;
             $digits_length = strlen($no);
             $i = 0;
             $str = [];
@@ -244,149 +279,168 @@
         $invStatusLabel = 'PARTIALLY PAID';
         $invStatusColor = '#d97706';
     }
+
+    $copiesCount = ($copies ?? 1) === 2 ? 2 : 1;
+    $copyLabels = ($copiesCount === 2)
+        ? ['Original — Customer Copy', 'Duplicate — Store Copy']
+        : ['Retail / Tax Invoice'];
 @endphp
 
-  <!-- Header -->
-  <table class="header-table">
-    <tr>
-      <td style="width: 70%; vertical-align: top;">
-        <div class="memo-tag">Tax / Retail Invoice</div>
-        <h1 class="store-name">{{ $dokan->name }}</h1>
-        @if($dokan->description)
-          <div class="store-desc">{{ $dokan->description }}</div>
-        @endif
-        @if($dokan->location)
-          <div class="store-desc">{{ $dokan->location }}</div>
-        @endif
-        <div class="store-meta">
-          @if($dokan->phone || ($dokan->owner && $dokan->owner->phone))
-            <strong>Phone:</strong> {{ $dokan->phone ?? $dokan->owner->phone }}
-          @endif
-          @if($dokan->email || ($dokan->owner && $dokan->owner->email))
-            | <strong>Email:</strong> {{ $dokan->email ?? $dokan->owner->email }}
-          @endif
-          @if($activeLicenses->count() > 0)
-            <br>
-            @foreach($activeLicenses as $lic)
-              <strong>{{ $lic->name }}:</strong> {{ $lic->number }}@if(!$loop->last) &bull; @endif
-            @endforeach
-          @endif
-        </div>
-      </td>
-      <td style="width: 30%; text-align: right; vertical-align: top;">
-        <div style="font-size: 16px; font-weight: bold; color: #047857; text-transform: uppercase;">Invoice</div>
-        <div style="font-size: 10px; color: #475569; margin-top: 4px;">
-          <strong>Invoice No:</strong> #TS/{{ date('Y') }}/{{ sprintf('%03d', $firstSale->id) }}<br>
-          <strong>Date:</strong> {{ date('d M, Y', strtotime($firstSale->sale_date)) }}<br>
-          <strong>Status:</strong> <span style="color: {{ $invStatusColor }}; font-weight: bold;">{{ $invStatusLabel }}</span>
-        </div>
-      </td>
-    </tr>
-  </table>
-
-  <!-- Billing Info -->
-  <table class="info-table">
-    <tr>
-      <td style="width: 55%; padding-right: 15px;">
-        <div class="info-block-title">Billed To</div>
-        <div class="party-name">{{ $customer ? ($customer->shop_name ? $customer->shop_name . ' (' . $customer->name . ')' : $customer->name) : 'Walk-in Customer' }}</div>
-        @if($customer && $customer->phone)
-          <div><strong>Phone:</strong> {{ $customer->phone }}</div>
-        @endif
-        @if($customer && $customer->email)
-          <div><strong>Email:</strong> {{ $customer->email }}</div>
-        @endif
-      </td>
-      <td style="width: 45%; padding-left: 15px; border-left: 1px solid #e2e8f0;">
-        <div class="info-block-title">Payment Overview</div>
-        <div><strong>Payment Status:</strong> <span style="color: {{ $invStatusColor }}; font-weight: bold;">{{ $invStatusLabel }}</span></div>
-        <div><strong>Paid Amount:</strong> &#8377; {{ number_format($invPaidAmount, 2) }}</div>
-        @if($invDueAmount > 0)
-          <div><strong>Remaining Due:</strong> <span style="color: #dc2626; font-weight: bold;">&#8377; {{ number_format($invDueAmount, 2) }}</span></div>
-        @endif
-      </td>
-    </tr>
-  </table>
-
-  <!-- Line Items -->
-  <table class="items-table">
-    <thead>
+@foreach($copyLabels as $copyIndex => $copyLabel)
+  <div class="invoice-container">
+    <!-- Header -->
+    <table class="header-table">
       <tr>
-        <th style="width: 6%;" class="text-center">#</th>
-        <th style="width: 46%;">Description of Goods</th>
-        <th style="width: 16%;" class="text-center">Quantity</th>
-        <th style="width: 16%;" class="text-right">Rate (&#8377;)</th>
-        <th style="width: 16%;" class="text-right">Amount (&#8377;)</th>
-      </tr>
-    </thead>
-    <tbody>
-      @foreach($sales as $index => $sale)
-        <tr>
-          <td class="text-center" style="color: #64748b; font-weight: bold;">{{ sprintf('%02d', $index + 1) }}</td>
-          <td>
-            <div class="product-title">{{ $sale->product ? $sale->product->name : 'Deleted Item' }}</div>
-            @if($sale->product && $sale->product->description)
-              <div class="product-sub">{{ $sale->product->description }}</div>
+        <td style="width: 65%; vertical-align: top;">
+          <div class="memo-tag">
+            Retail Invoice
+            <span class="copy-pill">{{ $copyLabel }}</span>
+          </div>
+          <h1 class="store-name">{{ $dokan->name }}</h1>
+          @if($dokan->description)
+            <div class="store-desc">{{ $dokan->description }}</div>
+          @endif
+          @if($dokan->location)
+            <div class="store-desc">{{ $dokan->location }}</div>
+          @endif
+          <div class="store-meta">
+            @if($dokan->phone || ($dokan->owner && $dokan->owner->phone))
+              <strong>Phone:</strong> {{ $dokan->phone ?? $dokan->owner->phone }}
             @endif
-          </td>
-          <td class="text-center">
-            <strong>{{ $sale->qty }}</strong> pkt{{ $sale->qty > 1 ? 's' : '' }}
-            <div class="product-sub">({{ $sale->qty * $sale->packet_size }} pcs)</div>
-          </td>
-          <td class="text-right">&#8377; {{ number_format($sale->rate, 2) }}</td>
-          <td class="text-right">&#8377; {{ number_format($sale->qty * $sale->rate, 2) }}</td>
-        </tr>
-      @endforeach
-
-      <!-- Subtotal -->
-      <tr class="calc-row">
-        <td colspan="3" style="border: none;"></td>
-        <td class="text-right" style="font-weight: bold; color: #475569;">Sub Total:</td>
-        <td class="text-right" style="font-weight: bold;">&#8377; {{ number_format($grossSubtotal, 2) }}</td>
+            @if($dokan->email || ($dokan->owner && $dokan->owner->email))
+              | <strong>Email:</strong> {{ $dokan->email ?? $dokan->owner->email }}
+            @endif
+            @if($activeLicenses->count() > 0)
+              <br>
+              @foreach($activeLicenses as $lic)
+                <strong>{{ $lic->name }}:</strong> {{ $lic->number }}@if(!$loop->last) &bull; @endif
+              @endforeach
+            @endif
+          </div>
+        </td>
+        <td style="width: 35%; text-align: right; vertical-align: top;">
+          <div style="font-size: {{ $copiesCount === 2 ? '11px' : '13px' }}; font-weight: bold; color: #047857; text-transform: uppercase;">Invoice</div>
+          <div style="font-size: {{ $copiesCount === 2 ? '7.5px' : '8.5px' }}; color: #475569; margin-top: 2px; line-height: 1.3;">
+            <strong>Invoice No:</strong> #TS/{{ date('Y') }}/{{ sprintf('%03d', $firstSale->id) }}<br>
+            <strong>Date:</strong> {{ date('d M, Y', strtotime($firstSale->sale_date)) }}<br>
+            <strong>Status:</strong> <span style="color: {{ $invStatusColor }}; font-weight: bold;">{{ $invStatusLabel }}</span>
+          </div>
+        </td>
       </tr>
+    </table>
 
-      <!-- Discount -->
-      @if($totalDiscount > 0)
+    <!-- Billing Info -->
+    <table class="info-table">
+      <tr>
+        <td style="width: 55%; padding-right: 10px;">
+          <div class="info-block-title">Billed To</div>
+          <div class="party-name">{{ $customer ? ($customer->shop_name ? $customer->shop_name . ' (' . $customer->name . ')' : $customer->name) : 'Walk-in Customer' }}</div>
+          @if($customer && $customer->phone)
+            <div><strong>Phone:</strong> {{ $customer->phone }}</div>
+          @endif
+          @if($customer && $customer->email)
+            <div><strong>Email:</strong> {{ $customer->email }}</div>
+          @endif
+        </td>
+        <td style="width: 45%; padding-left: 10px; border-left: 1px solid #e2e8f0;">
+          <div class="info-block-title">Payment Overview</div>
+          <div><strong>Payment Status:</strong> <span style="color: {{ $invStatusColor }}; font-weight: bold;">{{ $invStatusLabel }}</span></div>
+          <div><strong>Paid Amount:</strong> &#8377; {{ number_format($invPaidAmount, 2) }}</div>
+          @if($invDueAmount > 0)
+            <div><strong>Remaining Due:</strong> <span style="color: #dc2626; font-weight: bold;">&#8377; {{ number_format($invDueAmount, 2) }}</span></div>
+          @endif
+        </td>
+      </tr>
+    </table>
+
+    <!-- Line Items -->
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width: 6%;" class="text-center">#</th>
+          <th style="width: 48%;">Description of Goods</th>
+          <th style="width: 16%;" class="text-center">Quantity</th>
+          <th style="width: 15%;" class="text-right">Rate (&#8377;)</th>
+          <th style="width: 15%;" class="text-right">Amount (&#8377;)</th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach($sales as $index => $sale)
+          <tr>
+            <td class="text-center" style="color: #64748b; font-weight: bold;">{{ sprintf('%02d', $index + 1) }}</td>
+            <td>
+              <div class="product-title">{{ $sale->product ? $sale->product->name : 'Item' }}</div>
+              @if($sale->product && $sale->product->description)
+                <div class="product-sub">{{ $sale->product->description }}</div>
+              @endif
+            </td>
+            <td class="text-center">
+              <strong>{{ $sale->qty }}</strong> pkt{{ $sale->qty > 1 ? 's' : '' }}
+              <div class="product-sub">({{ $sale->qty * $sale->packet_size }} pcs)</div>
+            </td>
+            <td class="text-right">&#8377; {{ number_format($sale->rate, 2) }}</td>
+            <td class="text-right">&#8377; {{ number_format($sale->qty * $sale->rate, 2) }}</td>
+          </tr>
+        @endforeach
+
+        <!-- Subtotal -->
         <tr class="calc-row">
           <td colspan="3" style="border: none;"></td>
-          <td class="text-right" style="font-weight: bold; color: #d97706;">Discount:</td>
-          <td class="text-right" style="font-weight: bold; color: #d97706;">- &#8377; {{ number_format($totalDiscount, 2) }}</td>
+          <td class="text-right" style="font-weight: bold; color: #475569;">Sub Total:</td>
+          <td class="text-right" style="font-weight: bold;">&#8377; {{ number_format($grossSubtotal, 2) }}</td>
         </tr>
-      @endif
 
-      <!-- Grand Total -->
-      <tr class="grand-total-row">
-        <td colspan="3" style="border: none; background-color: transparent !important;"></td>
-        <td class="text-right">Grand Total:</td>
-        <td class="text-right">&#8377; {{ number_format($grandTotal, 2) }}</td>
+        <!-- Discount -->
+        @if($totalDiscount > 0)
+          <tr class="calc-row">
+            <td colspan="3" style="border: none;"></td>
+            <td class="text-right" style="font-weight: bold; color: #d97706;">Discount:</td>
+            <td class="text-right" style="font-weight: bold; color: #d97706;">- &#8377; {{ number_format($totalDiscount, 2) }}</td>
+          </tr>
+        @endif
+
+        <!-- Grand Total -->
+        <tr class="grand-total-row">
+          <td colspan="3" style="border: none; background-color: transparent !important;"></td>
+          <td class="text-right">Grand Total:</td>
+          <td class="text-right">&#8377; {{ number_format($grandTotal, 2) }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Amount in Words -->
+    <div class="words-banner">
+      <strong>In Words:</strong> {{ $amountInWords }}
+    </div>
+
+    <!-- Footer / Signatures -->
+    <table class="footer-table">
+      <tr>
+        <td style="width: 60%; vertical-align: bottom;">
+          <div class="terms-box">
+            <strong>Terms & Conditions:</strong><br>
+            1. Goods once sold will not be returned or exchanged.<br>
+            2. All disputes are subject to local jurisdiction.<br>
+            3. Computer-generated invoice.
+          </div>
+        </td>
+        <td style="width: 40%; vertical-align: bottom; text-align: right;">
+          <div style="display: inline-block; text-align: center; width: 140px; float: right;">
+            <div style="font-size: {{ $copiesCount === 2 ? '7px' : '8px' }}; font-weight: bold; color: #0f172a;">For {{ $dokan->name }}</div>
+            <div class="sig-line">Authorized Signatory</div>
+          </div>
+        </td>
       </tr>
-    </tbody>
-  </table>
-
-  <!-- Amount in Words -->
-  <div class="words-banner">
-    <strong>Amount in Words:</strong> {{ $amountInWords }}
+    </table>
   </div>
 
-  <!-- Footer / Signatures -->
-  <table class="footer-table">
-    <tr>
-      <td style="width: 55%; vertical-align: bottom;">
-        <div class="terms-box">
-          <strong>Terms & Conditions:</strong><br>
-          1. Goods once sold will not be taken back or exchanged.<br>
-          2. All disputes are subject to local jurisdiction only.<br>
-          3. This is a computer-generated invoice.
-        </div>
-      </td>
-      <td style="width: 45%; vertical-align: bottom; text-align: right;">
-        <div style="display: inline-block; text-align: center; width: 160px; float: right;">
-          <div style="font-size: 10px; font-weight: bold; color: #0f172a; margin-bottom: 40px;">For {{ $dokan->name }}</div>
-          <div class="sig-line">Authorized Signatory</div>
-        </div>
-      </td>
-    </tr>
-  </table>
+  @if($copiesCount === 2 && $copyIndex === 0)
+    <!-- Cut Divider between Customer Copy and Store Copy -->
+    <div class="cut-divider">
+      <span class="cut-badge">&#9986; CUT HERE &bull; CUSTOMER COPY ABOVE / STORE COPY BELOW &#9986;</span>
+    </div>
+  @endif
+@endforeach
 
 </body>
 </html>

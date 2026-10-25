@@ -542,12 +542,18 @@ class SaleController extends Controller
         }
 
         $firstSale = $sales->first();
+        $copies = (int) $request->input('copies', 1);
+        if ($copies !== 2) {
+            $copies = 1;
+        }
+
         $dokan->load('licenses');
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.invoice', [
             'dokan'     => $dokan,
             'sales'     => $sales,
             'firstSale' => $firstSale,
-        ]);
+            'copies'    => $copies,
+        ])->setPaper($copies === 2 ? 'a4' : 'a5', 'portrait');
 
         return $pdf->stream("invoice-INV-{$firstSale->id}.pdf");
     }

@@ -329,15 +329,27 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
                             )}
                         </div>
 
-                        <div className="flex justify-between items-center pt-2 border-t">
-                            <div className="flex items-center space-x-2">
+                        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-3 border-t">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <a
-                                    href={route('sales.invoice.pdf', { sale_ids: selectedInvoice.sale_ids.join(',') })}
+                                    href={route('sales.invoice.pdf', { sale_ids: selectedInvoice.sale_ids.join(','), copies: 1 })}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-indigo-600 hover:text-indigo-800 text-xs font-semibold flex items-center px-3 py-2 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors"
+                                    className="text-indigo-700 hover:text-indigo-900 text-xs font-semibold flex items-center px-3 py-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-md transition-colors shadow-sm"
+                                    title="Download 1 Copy in A5 (Half-A4) size"
                                 >
-                                    <FaReceipt size={14} className="mr-1.5" /> Download PDF Invoice
+                                    <FaReceipt size={13} className="mr-1.5 text-indigo-600" />
+                                    <span>1 Copy <span className="text-[10px] text-indigo-500 font-normal">(A5 Half-Page)</span></span>
+                                </a>
+                                <a
+                                    href={route('sales.invoice.pdf', { sale_ids: selectedInvoice.sale_ids.join(','), copies: 2 })}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-indigo-800 hover:text-indigo-950 text-xs font-semibold flex items-center px-3 py-2 bg-indigo-100/80 hover:bg-indigo-200 border border-indigo-300 rounded-md transition-colors shadow-sm"
+                                    title="Download 2 copies on a single A4 sheet with cut line (Customer + Store Copy)"
+                                >
+                                    <FaReceipt size={13} className="mr-1.5 text-indigo-700" />
+                                    <span>2-in-1 Copies <span className="text-[10px] text-indigo-600 font-normal">(A4 Customer + Store)</span></span>
                                 </a>
                                 <button
                                     type="button"
@@ -681,13 +693,22 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
                                                                         <FaEye size={13} />
                                                                     </button>
                                                                     <a
-                                                                        href={route('sales.invoice.pdf', { sale_ids: inv.sale_ids.join(',') })}
+                                                                        href={route('sales.invoice.pdf', { sale_ids: inv.sale_ids.join(','), copies: 1 })}
                                                                         target="_blank"
                                                                         rel="noopener noreferrer"
                                                                         className="p-1.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors"
-                                                                        title="Download PDF Invoice"
+                                                                        title="Download Invoice: 1 Copy (A5 Half-Page)"
                                                                     >
                                                                         <FaReceipt size={13} />
+                                                                    </a>
+                                                                    <a
+                                                                        href={route('sales.invoice.pdf', { sale_ids: inv.sale_ids.join(','), copies: 2 })}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="px-1.5 py-1 rounded-md bg-purple-50 hover:bg-purple-100 text-purple-700 transition-colors text-[10px] font-mono font-bold"
+                                                                        title="Download Invoice: 2-in-1 Copies on A4 (Customer + Store)"
+                                                                    >
+                                                                        2x
                                                                     </a>
                                                                     <button
                                                                         type="button"
