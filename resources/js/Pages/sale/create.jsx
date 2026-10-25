@@ -31,6 +31,11 @@ export default function CreateSale({ products, customers }) {
     // Quick add product from search/dropdown selector
     const [quickSelectedProductId, setQuickSelectedProductId] = useState('');
 
+    const selectedCustomer = useMemo(() => {
+        if (!data.customer_id) return null;
+        return customers.find(c => String(c.id) === String(data.customer_id)) || null;
+    }, [customers, data.customer_id]);
+
     const handleAddQuickProduct = () => {
         if (!quickSelectedProductId) return;
         // Check if already in cart, if so increase qty
@@ -202,24 +207,63 @@ export default function CreateSale({ products, customers }) {
                                     </div>
 
                                     <div>
-                                        <label htmlFor="customer_id" className="block text-xs font-medium text-gray-700 mb-1">
-                                            Customer Name
-                                        </label>
-                                        <select
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label htmlFor="customer_id" className="block text-xs font-medium text-gray-700">
+                                                Customer Name
+                                            </label>
+                                            <Link
+                                                href={route('coustomers.create')}
+                                                target="_blank"
+                                                className="text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 transition-colors"
+                                                title="Add new customer (opens in new tab)"
+                                            >
+                                                <FaPlus size={9} /> New Customer
+                                            </Link>
+                                        </div>
+                                        <SearchableSelect
                                             id="customer_id"
-                                            className="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                                            options={customers}
                                             value={data.customer_id}
-                                            onChange={(e) => setData('customer_id', e.target.value)}
-                                        >
-                                            <option value="">Walk-in / Cash Customer</option>
-                                            {customers.map(c => (
-                                                <option key={c.id} value={c.id}>
-                                                    {c.name} {c.phone ? `(${c.phone})` : ''}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            onChange={(val) => setData('customer_id', val)}
+                                            placeholder="Walk-in / Cash Customer"
+                                            searchPlaceholder="Search customer by name, phone, shop..."
+                                            emptyOption={{ id: '', name: 'Walk-in / Cash Customer', subtitle: 'Standard counter sale (no customer account)' }}
+                                            icon={FaUser}
+                                            error={Boolean(errors.customer_id)}
+                                        />
                                         {errors.customer_id && (
                                             <p className="text-xs text-red-600 mt-1">{errors.customer_id}</p>
+                                        )}
+
+                                        {/* Selected Customer Quick Info Card */}
+                                        {selectedCustomer && (
+                                            <div className="mt-2.5 p-2.5 bg-indigo-50/60 rounded-lg border border-indigo-100 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-in fade-in duration-150">
+                                                <div className="min-w-0">
+                                                    <div className="font-bold text-gray-900 flex items-center gap-1.5 truncate">
+                                                        <span>{selectedCustomer.name}</span>
+                                                        {selectedCustomer.shop_name && (
+                                                            <span className="text-[10px] bg-indigo-100 text-indigo-800 font-medium px-1.5 py-0.5 rounded">
+                                                                {selectedCustomer.shop_name}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-[11px] text-gray-600 mt-0.5 flex flex-wrap items-center gap-3">
+                                                        {selectedCustomer.phone && (
+                                                            <span className="font-mono text-gray-700 font-medium">📞 {selectedCustomer.phone}</span>
+                                                        )}
+                                                        {selectedCustomer.email && (
+                                                            <span className="text-gray-500">✉️ {selectedCustomer.email}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <Link
+                                                    href={route('coustomers.edit', selectedCustomer.id)}
+                                                    target="_blank"
+                                                    className="text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold shrink-0"
+                                                >
+                                                    View / Edit Profile →
+                                                </Link>
+                                            </div>
                                         )}
                                     </div>
                                 </div>

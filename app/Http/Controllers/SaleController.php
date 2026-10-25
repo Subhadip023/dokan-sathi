@@ -169,7 +169,7 @@ class SaleController extends Controller
         }
 
         $products = Product::where('dokan_id', $dokanId)->get(['id', 'name', 'description', 'selling_rate', 'cost_rate', 'packet_size', 'purchased_packets']);
-        $customers = Coustomer::where('dokan_id', $dokanId)->get(['id', 'name', 'phone']);
+        $customers = Coustomer::where('dokan_id', $dokanId)->get(['id', 'name', 'phone', 'email', 'shop_name']);
 
         return Inertia::render('sale/index', [
             'invoices' => $paginatedInvoices,
@@ -205,7 +205,7 @@ class SaleController extends Controller
         $dokanId = $dokan?->id;
 
         $products = Product::where('dokan_id', $dokanId)->get(['id', 'name', 'description', 'selling_rate', 'cost_rate', 'packet_size', 'purchased_packets']);
-        $customers = Coustomer::where('dokan_id', $dokanId)->get(['id', 'name', 'phone']);
+        $customers = Coustomer::where('dokan_id', $dokanId)->get(['id', 'name', 'phone', 'email', 'shop_name']);
 
         return Inertia::render('sale/create', [
             'products' => $products,
