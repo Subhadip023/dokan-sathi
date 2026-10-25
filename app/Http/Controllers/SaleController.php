@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class SaleController extends Controller
 {
@@ -40,6 +41,43 @@ class SaleController extends Controller
                 $q->whereIn('payment_status', ['credit', 'partially_paid'])
                   ->orWhere('due_amount', '>', 0);
             });
+        }
+
+        $period = $request->input('period', 'all');
+        $week = $request->input('week');
+        $filterDateRange = null;
+
+        if ($week) {
+            // ISO week format: "YYYY-Www", e.g. "2026-W43"
+            if (preg_match('/^(\d{4})-W(\d{1,2})$/', $week, $matches)) {
+                $year = (int)$matches[1];
+                $weekNum = (int)$matches[2];
+                $carbonDate = Carbon::now();
+                $carbonDate->setISODate($year, $weekNum);
+                $wStart = $carbonDate->copy()->startOfWeek()->toDateString();
+                $wEnd = $carbonDate->copy()->endOfWeek()->toDateString();
+                $query->whereBetween('sale_date', [$wStart, $wEnd]);
+                $filterDateRange = Carbon::parse($wStart)->format('d M') . ' - ' . Carbon::parse($wEnd)->format('d M Y');
+            }
+        } elseif ($period === 'today') {
+            $today = Carbon::today()->toDateString();
+            $query->where('sale_date', $today);
+            $filterDateRange = Carbon::today()->format('d M Y');
+        } elseif ($period === 'this_week') {
+            $wStart = Carbon::now()->startOfWeek()->toDateString();
+            $wEnd = Carbon::now()->endOfWeek()->toDateString();
+            $query->whereBetween('sale_date', [$wStart, $wEnd]);
+            $filterDateRange = Carbon::parse($wStart)->format('d M') . ' - ' . Carbon::parse($wEnd)->format('d M Y');
+        } elseif ($period === 'last_week') {
+            $wStart = Carbon::now()->subWeek()->startOfWeek()->toDateString();
+            $wEnd = Carbon::now()->subWeek()->endOfWeek()->toDateString();
+            $query->whereBetween('sale_date', [$wStart, $wEnd]);
+            $filterDateRange = Carbon::parse($wStart)->format('d M') . ' - ' . Carbon::parse($wEnd)->format('d M Y');
+        } elseif ($period === 'this_month') {
+            $mStart = Carbon::now()->startOfMonth()->toDateString();
+            $mEnd = Carbon::now()->endOfMonth()->toDateString();
+            $query->whereBetween('sale_date', [$mStart, $mEnd]);
+            $filterDateRange = Carbon::parse($mStart)->format('d M') . ' - ' . Carbon::parse($mEnd)->format('d M Y');
         }
 
         if ($search = $request->input('search')) {
@@ -191,7 +229,11 @@ class SaleController extends Controller
             ],
             'products' => $products,
             'customers' => $customers,
-            'filters' => $request->only(['search']),
+            'filters' => array_merge($request->only(['search', 'period', 'week']), [
+                'period' => $period,
+                'week' => $week ?? '',
+                'dateRange' => $filterDateRange,
+            ]),
             'isDueOnly' => $isDueOnly,
         ]);
     }

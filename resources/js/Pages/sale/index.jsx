@@ -7,7 +7,7 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import Modal from '@/Components/Modal';
 import Input from '@/Components/Input';
 import Pagination from '@/Components/Pagination';
-import { FaShoppingCart, FaCalendarAlt, FaUser, FaBoxOpen, FaChartLine, FaRupeeSign, FaPlus, FaEye, FaChevronDown, FaChevronUp, FaReceipt, FaMoneyBillWave, FaEdit } from 'react-icons/fa';
+import { FaShoppingCart, FaCalendarAlt, FaUser, FaBoxOpen, FaChartLine, FaRupeeSign, FaPlus, FaEye, FaChevronDown, FaChevronUp, FaReceipt, FaMoneyBillWave, FaEdit, FaCalendarWeek, FaTimes } from 'react-icons/fa';
 import { MdDeleteOutline } from 'react-icons/md';
 import debounce from 'lodash/debounce';
 
@@ -17,6 +17,8 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
     const isOwner = (user?.role ?? 1) === 1;
 
     const [search, setSearch] = useState(filters.search || '');
+    const [period, setPeriod] = useState(filters.period || 'all');
+    const [week, setWeek] = useState(filters.week || '');
     const [selectedInvoice, setSelectedInvoice] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -28,22 +30,51 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
         paid_amount: '',
     });
 
-    const performSearch = useCallback(
-        debounce((query) => {
+    const performFilter = useCallback(
+        debounce((query, periodVal, weekVal) => {
+            const params = {};
+            if (query) params.search = query;
+            if (weekVal) {
+                params.week = weekVal;
+            } else if (periodVal && periodVal !== 'all') {
+                params.period = periodVal;
+            }
+
             router.get(
                 isDueOnly ? route('sales.due') : route('sales.index'),
-                { search: query },
+                params,
                 { preserveState: true, replace: true }
             );
-        }, 500),
+        }, 400),
         [isDueOnly]
     );
 
     const handleSearchChange = (e) => {
         const value = e.target.value;
         setSearch(value);
-        performSearch(value);
+        performFilter(value, period, week);
     };
+
+    const handlePeriodChange = (newPeriod) => {
+        setPeriod(newPeriod);
+        setWeek('');
+        performFilter(search, newPeriod, '');
+    };
+
+    const handleWeekChange = (newWeek) => {
+        setWeek(newWeek);
+        setPeriod('custom_week');
+        performFilter(search, 'custom_week', newWeek);
+    };
+
+    const handleClearFilter = () => {
+        setSearch('');
+        setPeriod('all');
+        setWeek('');
+        performFilter('', 'all', '');
+    };
+
+    const hasActiveFilter = Boolean(search || (period && period !== 'all') || week);
 
     const toggleExpandInvoice = (id) => {
         setExpandedInvoiceId(expandedInvoiceId === id ? null : id);
@@ -372,7 +403,7 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
 
                 <div className="bg-white shadow-sm sm:rounded-xl border border-gray-200 overflow-hidden">
                     <div className="p-4 md:p-6 text-gray-900">
-                        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between mb-6 gap-4">
+                        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between mb-5 gap-4">
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900 flex items-center">
                                     <FaReceipt className={`mr-2 ${isDueOnly ? 'text-red-600' : 'text-indigo-600'}`} />
@@ -385,21 +416,134 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
                                 </p>
                             </div>
 
-                            <div className="flex flex-col sm:flex-row items-center gap-3">
+                            <Link
+                                href={route('sales.create')}
+                                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors shrink-0"
+                            >
+                                <FaPlus className="mr-1.5" size={12} /> New Invoice
+                            </Link>
+                        </div>
+
+                        {/* Filters & Search Toolbar */}
+                        <div className="bg-gray-50/80 p-3.5 rounded-xl border border-gray-200 mb-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+                            {/* Week & Period Presets */}
+                            <div className="flex items-center flex-wrap gap-1.5">
+                                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mr-1 flex items-center">
+                                    <FaCalendarWeek className="mr-1.5 text-indigo-500" /> Filter:
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => handlePeriodChange('all')}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                        period === 'all' && !week
+                                            ? 'bg-indigo-600 text-white shadow-2xs'
+                                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                                    }`}
+                                >
+                                    All Time
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handlePeriodChange('today')}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                        period === 'today'
+                                            ? 'bg-indigo-600 text-white shadow-2xs'
+                                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                                    }`}
+                                >
+                                    Today
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handlePeriodChange('this_week')}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                        period === 'this_week'
+                                            ? 'bg-indigo-600 text-white shadow-2xs'
+                                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                                    }`}
+                                    title="Current week (Monday to Sunday)"
+                                >
+                                    This Week
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handlePeriodChange('last_week')}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                        period === 'last_week'
+                                            ? 'bg-indigo-600 text-white shadow-2xs'
+                                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                                    }`}
+                                    title="Previous week (Monday to Sunday)"
+                                >
+                                    Last Week
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handlePeriodChange('this_month')}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                        period === 'this_month'
+                                            ? 'bg-indigo-600 text-white shadow-2xs'
+                                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                                    }`}
+                                >
+                                    This Month
+                                </button>
+
+                                {/* Custom Week Picker */}
+                                <div className="flex items-center space-x-1 sm:pl-2 sm:border-l sm:border-gray-200">
+                                    <span className="text-[11px] text-gray-500 font-medium hidden sm:inline">Pick Week:</span>
+                                    <input
+                                        type="week"
+                                        value={week}
+                                        onChange={(e) => handleWeekChange(e.target.value)}
+                                        className={`text-xs py-1 px-2 border rounded-lg shadow-2xs font-medium focus:ring-indigo-500 focus:border-indigo-500 ${
+                                            week ? 'border-indigo-500 bg-indigo-50/50 text-indigo-900 font-bold' : 'border-gray-200 bg-white text-gray-700'
+                                        }`}
+                                        title="Pick any calendar week"
+                                    />
+                                </div>
+
+                                {hasActiveFilter && (
+                                    <button
+                                        type="button"
+                                        onClick={handleClearFilter}
+                                        className="inline-flex items-center px-2 py-1 text-xs font-semibold text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg border border-red-200 transition-colors"
+                                        title="Clear all filters"
+                                    >
+                                        <FaTimes className="mr-1" size={10} /> Clear
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Search Field */}
+                            <div className="w-full lg:w-72">
                                 <Input
-                                    placeholder="Search customer, product, or date..."
+                                    placeholder="Search customer, product, date..."
                                     value={search}
                                     onChange={handleSearchChange}
-                                    addClass="w-full sm:w-64"
+                                    addClass="w-full"
                                 />
-                                <Link
-                                    href={route('sales.create')}
-                                    className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors"
-                                >
-                                    <FaPlus className="mr-1.5" size={12} /> New Invoice
-                                </Link>
                             </div>
                         </div>
+
+                        {/* Active Date Range Notice */}
+                        {filters.dateRange && (
+                            <div className="mb-4 px-3.5 py-2 bg-indigo-50/80 border border-indigo-100 rounded-lg text-xs text-indigo-900 flex items-center justify-between">
+                                <div className="flex items-center space-x-2">
+                                    <FaCalendarWeek className="text-indigo-600" size={13} />
+                                    <span>
+                                        Filtered by{' '}
+                                        <strong className="font-semibold">
+                                            {week ? `Week ${week}` : period === 'this_week' ? 'This Week' : period === 'last_week' ? 'Last Week' : period === 'today' ? 'Today' : 'This Month'}
+                                        </strong>
+                                        : <span className="font-mono ml-1 font-medium">{filters.dateRange}</span>
+                                    </span>
+                                </div>
+                                <span className="text-gray-500 font-mono">
+                                    {invoices.total || invoices.data.length} invoice{(invoices.total || invoices.data.length) === 1 ? '' : 's'} found
+                                </span>
+                            </div>
+                        )}
 
                         {invoices.data.length === 0 ? (
                             <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-300">
@@ -408,13 +552,23 @@ export default function SaleIndex({ invoices, summary, products, customers, filt
                                     {isDueOnly ? 'No Due Invoices Found' : 'No Sales Invoices Found'}
                                 </h3>
                                 <p className="mt-1 text-sm text-gray-500">
-                                    {search
-                                        ? 'No sales match your search query.'
+                                    {hasActiveFilter
+                                        ? 'No sales match your search and filter criteria.'
                                         : isDueOnly
                                             ? 'Great news! All customer invoices are fully settled.'
                                             : 'Record your first sale invoice to start tracking revenue.'}
                                 </p>
-                                {!search && (
+                                {hasActiveFilter ? (
+                                    <div className="mt-4">
+                                        <button
+                                            type="button"
+                                            onClick={handleClearFilter}
+                                            className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-md shadow-sm"
+                                        >
+                                            <FaTimes className="mr-1.5" size={12} /> Reset Filters
+                                        </button>
+                                    </div>
+                                ) : (
                                     <div className="mt-4">
                                         <Link
                                             href={route('sales.create')}
