@@ -343,11 +343,9 @@ export default function CustomerIndex({ coustomers, filters }) {
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 w-12">#</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Customer & Shop Name</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Phone & Email</th>
-                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Total Sales (₹)</th>
-                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Total Due (₹)</th>
+                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Sales & Due (₹)</th>
                                                             {isOwner && <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Total Profit (₹)</th>}
-                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Added By</th>
-                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Last Edited By</th>
+                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Added / Edited By</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Date Added</th>
                                                             <th className="px-4 py-3 title-font text-center font-medium text-gray-900 text-sm bg-gray-100 w-28">Actions</th>
                                                         </tr>
@@ -398,32 +396,48 @@ export default function CustomerIndex({ coustomers, filters }) {
                                                                         )}
                                                                     </div>
                                                                 </td>
-                                                                <td className="px-4 py-3 font-mono font-extrabold text-emerald-700 text-xs">
-                                                                    ₹{Number(customer.total_sales_amount || 0).toFixed(2)}
-                                                                </td>
-                                                                <td className="px-4 py-3 font-mono font-bold text-rose-600 text-xs">
-                                                                    ₹{Number(customer.total_due_amount || 0).toFixed(2)}
+                                                                <td className="px-4 py-3 text-xs">
+                                                                    <div className="flex flex-col space-y-1 font-mono">
+                                                                        <div className="flex items-center space-x-1.5">
+                                                                            <span className="text-[10px] uppercase font-semibold text-gray-400">Sales:</span>
+                                                                            <span className="font-extrabold text-emerald-700">
+                                                                                ₹{Number(customer.total_sales_amount || 0).toFixed(2)}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="flex items-center space-x-1.5">
+                                                                            <span className="text-[10px] uppercase font-semibold text-gray-400">Due:</span>
+                                                                            <span className={`font-bold ${Number(customer.total_due_amount || 0) > 0 ? 'text-rose-600' : 'text-gray-400'}`}>
+                                                                                ₹{Number(customer.total_due_amount || 0).toFixed(2)}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
                                                                 </td>
                                                                 {isOwner && (
                                                                     <td className="px-4 py-3 font-mono font-bold text-indigo-600 text-xs">
                                                                         ₹{Number(customer.total_profit || 0).toFixed(2)}
                                                                     </td>
                                                                 )}
-                                                                <td className="px-4 py-3 text-gray-700 text-xs">
-                                                                    <span className="inline-flex items-center font-medium bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs">
-                                                                        <FaUserCheck className="mr-1.5 text-indigo-500" size={11} />
-                                                                        {customer.added_by ? customer.added_by.name : 'Store Owner'}
-                                                                    </span>
-                                                                </td>
-                                                                <td className="px-4 py-3 text-gray-700 text-xs">
-                                                                    {customer.edited_by ? (
-                                                                        <span className="inline-flex items-center font-medium bg-amber-50 text-amber-800 px-2.5 py-1 rounded-full text-xs border border-amber-200">
-                                                                            <FaRegEdit className="mr-1.5 text-amber-600" size={11} />
-                                                                            {customer.edited_by.name}
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span className="text-gray-400 italic text-xs">N/A</span>
-                                                                    )}
+                                                                <td className="px-4 py-3 text-xs">
+                                                                    <div className="flex flex-col space-y-1 text-[11px]">
+                                                                        <div className="flex items-center text-gray-700">
+                                                                            <FaUserCheck className="mr-1.5 text-indigo-500 shrink-0" size={11} />
+                                                                            <span className="text-gray-400 mr-1">Added:</span>
+                                                                            <strong className="text-gray-800 font-medium">
+                                                                                {customer.added_by ? customer.added_by.name : 'Store Owner'}
+                                                                            </strong>
+                                                                        </div>
+                                                                        {customer.edited_by ? (
+                                                                            <div className="flex items-center text-amber-900">
+                                                                                <FaRegEdit className="mr-1.5 text-amber-600 shrink-0" size={11} />
+                                                                                <span className="text-gray-400 mr-1">Edited:</span>
+                                                                                <strong className="text-amber-800 font-medium">
+                                                                                    {customer.edited_by.name}
+                                                                                </strong>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div className="text-gray-400 text-[10px] pl-4 italic">Not edited</div>
+                                                                        )}
+                                                                    </div>
                                                                 </td>
                                                                 <td className="px-4 py-3 text-gray-500 text-xs font-mono">
                                                                     {new Date(customer.created_at).toLocaleDateString()}
