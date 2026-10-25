@@ -104,7 +104,11 @@ export default function CreateOrder({ suppliers = [], products = [], order = nul
             setData('items', updated);
             toast.success(`Increased quantity for "${prod.name}"`);
         } else {
-            setData('items', [...data.items, createInitialItem(quickProductId)]);
+            if (data.items.length === 1 && !data.items[0].product_id && !data.items[0].product_name) {
+                setData('items', [createInitialItem(quickProductId)]);
+            } else {
+                setData('items', [...data.items, createInitialItem(quickProductId)]);
+            }
             toast.success(`Added "${prod.name}" to order`);
         }
 
@@ -215,12 +219,15 @@ export default function CreateOrder({ suppliers = [], products = [], order = nul
         }));
     }, [suppliers]);
 
-    // Product options for Quick Add
+    // Product options for Quick Add & item rows with description & stock
     const productOptions = useMemo(() => {
         return products.map(p => ({
             id: p.id,
             name: p.name,
-            subtitle: `Stock: ${p.purchased_packets} pkt • CP: ₹${p.cost_rate} • SP: ₹${p.selling_rate}`,
+            description: p.description || '',
+            subtitle: `${p.description ? `${p.description} • ` : ''}Stock: ${p.purchased_packets} pkt • CP: ₹${p.cost_rate} • SP: ₹${p.selling_rate}`,
+            purchased_packets: p.purchased_packets,
+            packet_size: p.packet_size || 1,
             stock: p.purchased_packets,
             cost_rate: p.cost_rate,
             selling_rate: p.selling_rate,
@@ -456,7 +463,7 @@ export default function CreateOrder({ suppliers = [], products = [], order = nul
                                                     <div className="col-span-12 md:col-span-5">
                                                         <div className="flex items-center justify-between mb-1">
                                                             <label className="block text-[11px] font-semibold text-gray-700">
-                                                                Product Name / Catalog Link
+                                                                Product Name & Catalog Link
                                                             </label>
                                                             {isCatalogProduct ? (
                                                                 <span className="text-[10px] bg-emerald-50 text-emerald-700 font-semibold px-2 py-0.5 rounded border border-emerald-200">
@@ -464,24 +471,25 @@ export default function CreateOrder({ suppliers = [], products = [], order = nul
                                                                 </span>
                                                             ) : (
                                                                 <span className="text-[10px] bg-amber-50 text-amber-800 font-medium px-2 py-0.5 rounded border border-amber-200">
-                                                                    New Product
+                                                                    Custom / New Product
                                                                 </span>
                                                             )}
                                                         </div>
 
                                                         <div className="space-y-1.5">
-                                                            <select
-                                                                className="w-full rounded-md border-gray-300 text-xs shadow-2xs"
+                                                            <SearchableSelect
+                                                                options={productOptions}
                                                                 value={item.product_id}
-                                                                onChange={(e) => handleItemChange(idx, 'product_id', e.target.value)}
-                                                            >
-                                                                <option value="">Custom Product (Or Link Existing)</option>
-                                                                {products.map(p => (
-                                                                    <option key={p.id} value={p.id}>
-                                                                        {p.name} (Stock: {p.purchased_packets} pkt)
-                                                                    </option>
-                                                                ))}
-                                                            </select>
+                                                                onChange={(val) => handleItemChange(idx, 'product_id', val)}
+                                                                placeholder="Search existing product or custom..."
+                                                                searchPlaceholder="Search product name, description..."
+                                                                emptyOption={{
+                                                                    id: '',
+                                                                    name: 'Custom Product (Enter title below)',
+                                                                    subtitle: 'Type product title & description manually'
+                                                                }}
+                                                                icon={FaBoxes}
+                                                            />
                                                             <input
                                                                 type="text"
                                                                 placeholder="Enter product title..."
@@ -491,6 +499,24 @@ export default function CreateOrder({ suppliers = [], products = [], order = nul
                                                                 required
                                                             />
                                                         </div>
+
+                                                        {/* Description Preview Banner */}
+                                                        {(item.description || catalogProd?.description) ? (
+                                                            <div className="mt-1.5 text-[11px] text-gray-600 bg-gray-50 border border-gray-200 rounded-md px-2.5 py-1.5 flex items-start gap-1.5">
+                                                                <FaInfoCircle size={11} className="text-indigo-500 mt-0.5 shrink-0" />
+                                                                <div className="min-w-0">
+                                                                    <span className="text-[10px] uppercase font-bold text-gray-400 block tracking-wider">Description</span>
+                                                                    <p className="italic text-gray-700 leading-snug">
+                                                                        {item.description || catalogProd?.description}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="mt-1 text-[11px] text-gray-400 italic flex items-center gap-1">
+                                                                <FaInfoCircle size={10} className="text-gray-300 shrink-0" />
+                                                                <span>No description set</span>
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     {/* Quantity (Packets) */}
@@ -554,32 +580,40 @@ export default function CreateOrder({ suppliers = [], products = [], order = nul
                                                 </div>
 
                                                 {/* Second Row: Packet Size, Description, Line Subtotal */}
-                                                <div className="grid grid-cols-12 gap-3 items-center bg-gray-50 p-2.5 rounded-lg text-xs">
+                                                <div className="grid grid-cols-12 gap-3 items-center bg-gray-50/80 p-3 rounded-lg text-xs border border-gray-100">
                                                     <div className="col-span-12 md:col-span-3">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span className="text-[11px] text-gray-500 shrink-0">Units / Packet:</span>
-                                                            <input
-                                                                type="number"
-                                                                min="1"
-                                                                className="w-20 rounded border-gray-300 text-xs py-1 px-2 font-mono text-center"
-                                                                value={item.packet_size}
-                                                                onChange={(e) => handleItemChange(idx, 'packet_size', e.target.value)}
-                                                            />
-                                                        </div>
+                                                        <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+                                                            Units / Packet
+                                                        </label>
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            className="w-full rounded border-gray-300 text-xs py-1.5 px-2 font-mono text-center shadow-2xs"
+                                                            value={item.packet_size}
+                                                            onChange={(e) => handleItemChange(idx, 'packet_size', e.target.value)}
+                                                        />
                                                     </div>
 
                                                     <div className="col-span-12 md:col-span-6">
+                                                        <div className="flex items-center justify-between mb-1">
+                                                            <label className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider">
+                                                                Product Description / Specs
+                                                            </label>
+                                                            {catalogProd?.description && !item.description && (
+                                                                <span className="text-[10px] text-gray-400 italic">Inherited from catalog</span>
+                                                            )}
+                                                        </div>
                                                         <input
                                                             type="text"
-                                                            placeholder="Product remarks, batch number, or specs (optional)..."
-                                                            className="w-full rounded border-gray-300 text-xs py-1 px-2 text-gray-700"
-                                                            value={item.description}
+                                                            placeholder="Enter product description, specifications, or remarks..."
+                                                            className="w-full rounded border-gray-300 text-xs py-1.5 px-2.5 text-gray-800 shadow-2xs focus:border-indigo-500 focus:ring-indigo-500"
+                                                            value={item.description || ''}
                                                             onChange={(e) => handleItemChange(idx, 'description', e.target.value)}
                                                         />
                                                     </div>
 
                                                     <div className="col-span-12 md:col-span-3 text-right">
-                                                        <span className="text-[10px] text-gray-500 uppercase tracking-wider block">Line Total</span>
+                                                        <span className="text-[10px] text-gray-500 uppercase tracking-wider block mb-1">Line Total</span>
                                                         <span className="font-mono font-extrabold text-sm text-indigo-700">
                                                             ₹{lineTotal.toFixed(2)}
                                                         </span>
