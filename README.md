@@ -1,67 +1,218 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Dokan Sathi 🏪
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+[![Laravel Version](https://img.shields.io/badge/Laravel-11.x-FF2D20?style=for-the-badge&logo=laravel)](https://laravel.com)
+[![React Version](https://img.shields.io/badge/React-18.x-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![Inertia.js](https://img.shields.io/badge/Inertia.js-v2.0-9553E9?style=for-the-badge&logo=inertia)](https://inertiajs.com)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.x-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com)
+[![Vite](https://img.shields.io/badge/Vite-6.x-646CFF?style=for-the-badge&logo=vite)](https://vitejs.dev)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-## About Laravel
+**Dokan Sathi** is a comprehensive, modern shop management and Point of Sale (POS) web application tailored for retail and wholesale businesses. It empowers shop owners to handle billing, inventory procurement, customer balances, supplier accounts, and profit & loss analytics—all with lightning speed and a responsive, mobile-first design.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 📑 Table of Contents
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- [Key Features](#-key-features)
+- [Technology Stack](#-technology-stack)
+- [System Architecture & Screenshots](#-system-architecture)
+- [Installation & Setup](#-installation--setup)
+- [Database & Seeders](#-database--seeders)
+- [Running the Application](#-running-the-application)
+- [Invoice Formats](#-invoice-formats)
+- [Project Directory Structure](#-project-directory-structure)
+- [Testing](#-testing)
+- [License](#-license)
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## ✨ Key Features
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 🛒 High-Speed Point of Sale (POS)
+- **Fast Billing**: Instant product search with keyboard shortcuts and quantity adjustment tickers.
+- **Customer Association**: Link sales to registered customers or proceed with walk-in open sales.
+- **Payment & Due Tracking**: Real-time tracking of paid amount, partial payments, and customer due balances.
+- **Period & Week Filtering**: Filter sales records by predefined date periods, calendar weeks, or custom date ranges.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 📄 Professional Invoicing & PDF Generation
+- **Standard A4 Invoice**: Full-page breakdown with Dokan branding, customer details, and itemized calculations.
+- **Half-Page A5 Invoice**: Compact, paper-saving single-order invoice.
+- **2-in-1 Dual A4 Invoice**: Prints both the **Customer Copy** and **Store Copy** side-by-side on a single A4 page with an aesthetic scissor-cut divider.
+- Direct PDF downloads powered by `barryvdh/laravel-dompdf`.
 
-## Laravel Sponsors
+### 📦 Product & Inventory Management
+- **Packet & Unit Tracking**: Supports packaging dimensions (packet size in pieces, purchased packets, and unit breakdown).
+- **Dual Valuation**: Tracks Cost Price (CP) and Selling Price (SP) for accurate inventory valuation.
+- **Low Stock Alerts**: Configurable reorder levels with visual badges and responsive mobile cards.
+- **Public & Internal Price Lists**: Exportable price list with shareable public URLs (`/{dokan:slug}/price-list`) and downloadable PDF catalogs.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 📋 Orders & Restocking (Suppliers & Customers)
+- **Dual-Party Orders**: Create orders for vendor procurement (suppliers) or bookings/pre-orders for customers.
+- **Auto-Catalog Synchronization**: Adding new items to an order automatically creates or updates the product catalog.
+- **Inventory Auto-Credit**: Marking an order as **Received** instantly updates inventory stock levels.
 
-### Premium Partners
+### 👥 Customer & Supplier Management
+- **Customer Ledger**: Track purchase history, total sales, and pending due amounts in one unified view.
+- **Supplier Directory**: Keep company details, phone numbers, and procurement histories organized.
+- **Activity Auditing**: Single-column `Added / Edited By` tracking for accountability.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### 📊 Financial Insights & P&L Reports
+- **Sales Analytics**: Interactive charts displaying revenue, cost of goods sold (COGS), and gross margins.
+- **Overhead Costs Tracker**: Record operational expenses (rent, electricity, salaries, transport, tea/snacks).
+- **Net Profit & Loss Statement**: Comprehensive P&L calculation incorporating sales profit minus overhead costs.
+- **Investment Tracking**: Log capital investments and partner contributions.
 
-## Contributing
+### 🏬 Multi-Dokan (Multi-Shop) Support
+- Switch between multiple shops/branches from a single user account.
+- Individual shop profiles with custom branding, logo, contact information, and public slugs.
+- Role-based permissions (Store Owner vs. Staff).
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## 🛠️ Technology Stack
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+| Layer | Technology |
+|---|---|
+| **Backend Framework** | [Laravel 11](https://laravel.com) (PHP 8.2+) |
+| **Frontend Architecture** | [Inertia.js v2](https://inertiajs.com) (SPA without client-side API routing) |
+| **UI Library** | [React 18](https://react.dev) |
+| **Styling & Components** | [Tailwind CSS 3](https://tailwindcss.com), [Headless UI](https://headlessui.com) |
+| **Icons & Notifications** | [React Icons](https://react-icons.github.io/react-icons/), [React Hot Toast](https://react-hot-toast.com) |
+| **Bundler & Tooling** | [Vite 6](https://vitejs.dev) |
+| **PDF Engine** | [laravel-dompdf](https://github.com/barryvdh/laravel-dompdf) |
+| **Database** | MySQL / SQLite |
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 🚀 Installation & Setup
 
-## License
+### Prerequisites
+- **PHP** >= 8.2 (with `pdo`, `mbstring`, `gd`, `xml`, `bcmath` extensions)
+- **Composer** >= 2.x
+- **Node.js** >= 18.x & **NPM**
+- **MySQL** 8.0+ or **SQLite**
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# dokan-sathi
+### Step-by-Step Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/Subhadip023/dokan-sathi.git
+   cd dokan-sathi
+   ```
+
+2. **Install PHP dependencies**:
+   ```bash
+   composer install
+   ```
+
+3. **Install JavaScript dependencies**:
+   ```bash
+   npm install
+   ```
+
+4. **Configure Environment**:
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+
+5. **Set up database configuration in `.env`**:
+   ```env
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=dokan_sathi
+   DB_USERNAME=root
+   DB_PASSWORD=
+   ```
+   *(Or set `DB_CONNECTION=sqlite` for zero-configuration local development)*
+
+6. **Run database migrations & seeders**:
+   ```bash
+   php artisan migrate --seed
+   ```
+
+7. **Create storage symbolic link**:
+   ```bash
+   php artisan storage:link
+   ```
+
+---
+
+## 💻 Running the Application
+
+### Development Mode (Concurrent)
+You can run the PHP server and Vite bundler together:
+```bash
+composer run dev
+```
+Or run each process in separate terminals:
+```bash
+# Terminal 1: Laravel Backend
+php artisan serve
+
+# Terminal 2: Vite Dev Server
+npm run dev
+```
+
+Visit the app at: `http://localhost:8000`
+
+### Production Build
+To create an optimized production build for deployment:
+```bash
+npm run build
+```
+
+---
+
+## 🖨️ Invoice Formats
+
+Dokan Sathi supports multiple printing formats to minimize paper waste:
+
+| Format | Endpoint / Query Parameter | Description |
+|---|---|---|
+| **A4 Full Invoice** | `/sales/invoice/pdf?sale_id={id}&format=a4` | Full-page comprehensive invoice |
+| **A5 Half-Page** | `/sales/invoice/pdf?sale_id={id}&format=a5` | Landscape half-page format |
+| **2-in-1 Dual A4** | `/sales/invoice/pdf?sale_id={id}&format=2in1` | Customer Copy + Store Copy on 1 page with cut line |
+
+---
+
+## 📂 Project Directory Structure
+
+```plaintext
+dokan-sathi/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/       # POS, Sales, Orders, Customers, Dokan controllers
+│   │   ├── Requests/          # Form request validations (StoreOrderRequest, etc.)
+│   │   └── Middleware/        # HandleInertiaRequests, Multi-dokan resolver
+│   └── Models/                # Eloquent models (Dokan, Product, Sale, Order, Coustomer, etc.)
+├── database/
+│   ├── migrations/            # Schema definitions
+│   └── seeders/               # Demo data seeders (DemoDokanSeeder, ProductSeeder, etc.)
+├── resources/
+│   ├── js/
+│   │   ├── Components/        # Reusable UI (Modal, SearchableSelect, Buttons, Tickers)
+│   │   ├── Layouts/           # AuthenticatedLayout, GuestLayout
+│   │   └── Pages/             # Inertia pages (Dashboard, sale, order, product, coustomer, reports)
+│   └── views/                 # Blade templates for DomPDF invoices (pdf/invoice-*.blade.php)
+├── routes/
+│   ├── web.php                # Web routes & public catalog routes
+│   └── auth.php               # Authentication routes
+└── tests/                     # Unit and feature tests
+```
+
+---
+
+## 🧪 Testing
+
+Run the automated PHPUnit test suite:
+```bash
+php artisan test
+```
+
+---
+
+## 📄 License
+
+This project is open-source software licensed under the [MIT license](LICENSE).
