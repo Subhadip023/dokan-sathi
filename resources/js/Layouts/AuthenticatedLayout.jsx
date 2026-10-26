@@ -128,7 +128,7 @@ export default function AuthenticatedLayout({ header, children }) {
             <Toaster position="top-right" reverseOrder={false} />
 
             {/* Mobile Top Navbar Header */}
-            <div className="md:hidden h-16 bg-white text-gray-900 flex items-center justify-between px-4 border-b border-gray-200 sticky top-0 z-40">
+            <div className="md:hidden h-16 bg-white text-gray-900 flex items-center justify-between px-4 border-b border-gray-200 sticky top-0 z-30">
                 <div className="flex items-center space-x-2">
                     <Link href="/">
                         <ApplicationLogo className="block h-8 w-auto fill-current text-indigo-600" />
@@ -139,10 +139,11 @@ export default function AuthenticatedLayout({ header, children }) {
                 </div>
                 <button
                     type="button"
-                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    onClick={() => setSidebarOpen(true)}
                     className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none"
+                    aria-label="Open sidebar"
                 >
-                    {sidebarOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+                    <FaBars size={20} />
                 </button>
             </div>
 

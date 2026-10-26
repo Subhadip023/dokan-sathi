@@ -12,6 +12,7 @@ class Order extends Model
     protected $fillable = [
         'dokan_id',
         'supplier_id',
+        'customer_id',
         'order_number',
         'order_date',
         'status',
@@ -29,6 +30,11 @@ class Order extends Model
     public function supplier()
     {
         return $this->belongsTo(Supplier::class, 'supplier_id');
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Coustomer::class, 'customer_id');
     }
 
     public function items()

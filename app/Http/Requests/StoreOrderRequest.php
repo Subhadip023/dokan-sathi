@@ -23,6 +23,7 @@ class StoreOrderRequest extends FormRequest
     {
         return [
             'supplier_id' => 'nullable|exists:suppliers,id',
+            'customer_id' => 'nullable|exists:coustomers,id',
             'order_date' => 'required|date',
             'status' => 'required|in:pending,ordered,received,cancelled',
             'notes' => 'nullable|string|max:1000',

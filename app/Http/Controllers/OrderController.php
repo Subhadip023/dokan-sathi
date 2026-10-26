@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
+use App\Models\Coustomer;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -23,7 +24,7 @@ class OrderController extends Controller
         $dokan = $request->user()->currentDokan();
         $dokanId = $dokan?->id;
 
-        $query = Order::with(['supplier:id,name,company_name,phone', 'items.product', 'addedBy:id,name', 'editedBy:id,name'])
+        $query = Order::with(['supplier:id,name,company_name,phone', 'customer:id,name,phone,shop_name', 'items.product', 'addedBy:id,name', 'editedBy:id,name'])
             ->where('dokan_id', $dokanId);
 
         if ($status = $request->input('status')) {
@@ -37,6 +38,11 @@ class OrderController extends Controller
                   ->orWhereHas('supplier', function ($sq) use ($search) {
                       $sq->where('name', 'like', "%{$search}%")
                         ->orWhere('company_name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('customer', function ($cq) use ($search) {
+                      $cq->where('name', 'like', "%{$search}%")
+                        ->orWhere('shop_name', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
                   })
                   ->orWhereHas('items', function ($iq) use ($search) {
                       $iq->where('product_name', 'like', "%{$search}%");
@@ -54,6 +60,7 @@ class OrderController extends Controller
         $pendingOrders = $allOrders->whereIn('status', ['pending', 'ordered'])->count();
 
         $suppliers = Supplier::where('dokan_id', $dokanId)->get(['id', 'name', 'company_name', 'phone']);
+        $customers = Coustomer::where('dokan_id', $dokanId)->get(['id', 'name', 'phone', 'shop_name']);
         $products = Product::where('dokan_id', $dokanId)->get(['id', 'name', 'description', 'cost_rate', 'selling_rate', 'purchased_packets', 'packet_size']);
 
         return Inertia::render('order/index', [
@@ -65,6 +72,7 @@ class OrderController extends Controller
                 'pendingOrders' => $pendingOrders,
             ],
             'suppliers' => $suppliers,
+            'customers' => $customers,
             'products' => $products,
             'filters' => $request->only(['search', 'status']),
         ]);
@@ -79,10 +87,12 @@ class OrderController extends Controller
         $dokanId = $dokan?->id;
 
         $suppliers = Supplier::where('dokan_id', $dokanId)->get(['id', 'name', 'company_name', 'phone']);
+        $customers = Coustomer::where('dokan_id', $dokanId)->get(['id', 'name', 'phone', 'shop_name']);
         $products = Product::where('dokan_id', $dokanId)->get(['id', 'name', 'description', 'cost_rate', 'selling_rate', 'purchased_packets', 'packet_size']);
 
         return Inertia::render('order/create', [
             'suppliers' => $suppliers,
+            'customers' => $customers,
             'products' => $products,
         ]);
     }
@@ -109,6 +119,7 @@ class OrderController extends Controller
             $order = Order::create([
                 'dokan_id' => $dokanId,
                 'supplier_id' => $validated['supplier_id'] ?? null,
+                'customer_id' => $validated['customer_id'] ?? null,
                 'order_number' => $orderNumber,
                 'order_date' => $validated['order_date'],
                 'status' => $validated['status'],
@@ -199,14 +210,16 @@ class OrderController extends Controller
             abort(403);
         }
 
-        $order->load(['items.product', 'supplier']);
+        $order->load(['items.product', 'supplier', 'customer']);
         $suppliers = Supplier::where('dokan_id', $dokan->id)->get(['id', 'name', 'company_name', 'phone']);
+        $customers = Coustomer::where('dokan_id', $dokan->id)->get(['id', 'name', 'phone', 'shop_name']);
         $products = Product::where('dokan_id', $dokan->id)->get(['id', 'name', 'description', 'cost_rate', 'selling_rate', 'purchased_packets', 'packet_size']);
 
         return Inertia::render('order/create', [
             'order' => $order,
             'isEdit' => true,
             'suppliers' => $suppliers,
+            'customers' => $customers,
             'products' => $products,
         ]);
     }
@@ -247,6 +260,7 @@ class OrderController extends Controller
 
             $order->update([
                 'supplier_id' => $validated['supplier_id'] ?? null,
+                'customer_id' => $validated['customer_id'] ?? null,
                 'order_date' => $validated['order_date'],
                 'status' => $newStatus,
                 'total_amount' => round($totalAmount, 2),

@@ -14,6 +14,8 @@ import {
     FaEye,
     FaRegEdit,
     FaTruck,
+    FaUser,
+    FaStore,
     FaBoxes,
     FaCalendarAlt,
     FaRupeeSign,
@@ -29,7 +31,7 @@ import {
 import { MdDeleteOutline } from 'react-icons/md';
 import debounce from 'lodash/debounce';
 
-export default function OrderIndex({ orders, summary, suppliers, products, filters }) {
+export default function OrderIndex({ orders, summary, suppliers, customers = [], products, filters }) {
     const current_dokan = usePage().props.auth.current_dokan;
     const user = usePage().props.auth.user;
     const isOwner = (user?.role ?? 1) === 1;
@@ -153,23 +155,49 @@ export default function OrderIndex({ orders, summary, suppliers, products, filte
                             </div>
                         </div>
 
-                        {/* Supplier Info */}
-                        <div className="bg-gray-50 p-3.5 rounded-lg border border-gray-200 mb-4 flex justify-between items-center text-xs">
+                        {/* Contact / Party Info */}
+                        <div className="bg-gray-50 p-3.5 rounded-lg border border-gray-200 mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                             <div>
-                                <span className="text-gray-500 font-medium block">Supplier / Vendor</span>
-                                <span className="font-bold text-gray-900 text-sm">
-                                    {selectedOrder.supplier ? selectedOrder.supplier.name : 'General Supplier / Direct Market'}
-                                </span>
-                                {selectedOrder.supplier?.company_name && (
-                                    <span className="text-indigo-600 font-semibold block">{selectedOrder.supplier.company_name}</span>
+                                <span className="text-gray-500 font-medium block">Linked Contact / Party</span>
+                                {selectedOrder.supplier && (
+                                    <div className="mt-1">
+                                        <div className="font-bold text-gray-900 flex items-center gap-1.5">
+                                            <FaTruck className="text-indigo-600 shrink-0" size={12} />
+                                            <span>{selectedOrder.supplier.name}</span>
+                                            {selectedOrder.supplier.company_name && (
+                                                <span className="text-[10px] bg-indigo-100 text-indigo-800 font-semibold px-1.5 py-0.5 rounded">
+                                                    {selectedOrder.supplier.company_name}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {selectedOrder.supplier.phone && (
+                                            <span className="text-gray-500 block text-[11px] mt-0.5">Phone: {selectedOrder.supplier.phone}</span>
+                                        )}
+                                    </div>
                                 )}
-                                {selectedOrder.supplier?.phone && (
-                                    <span className="text-gray-500 block">{selectedOrder.supplier.phone}</span>
+                                {selectedOrder.customer && (
+                                    <div className="mt-1">
+                                        <div className="font-bold text-gray-900 flex items-center gap-1.5">
+                                            <FaUser className="text-emerald-600 shrink-0" size={12} />
+                                            <span>{selectedOrder.customer.name}</span>
+                                            {selectedOrder.customer.shop_name && (
+                                                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-1.5 py-0.5 rounded">
+                                                    {selectedOrder.customer.shop_name}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {selectedOrder.customer.phone && (
+                                            <span className="text-gray-500 block text-[11px] mt-0.5">Phone: {selectedOrder.customer.phone}</span>
+                                        )}
+                                    </div>
+                                )}
+                                {!selectedOrder.supplier && !selectedOrder.customer && (
+                                    <span className="font-semibold text-gray-600 block mt-0.5">Direct / Open Order</span>
                                 )}
                             </div>
-                            <div className="text-right">
+                            <div className="text-left sm:text-right">
                                 <span className="text-gray-500 font-medium block">Created By</span>
-                                <span className="font-bold text-gray-800 block">
+                                <span className="font-bold text-gray-800 block mt-0.5">
                                     {selectedOrder.added_by ? selectedOrder.added_by.name : 'Store Administrator'}
                                 </span>
                             </div>
@@ -297,17 +325,17 @@ export default function OrderIndex({ orders, summary, suppliers, products, filte
                         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between mb-6 gap-4">
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                                    <FaClipboardList className="mr-2 text-indigo-600" /> Supplier Purchase Orders
+                                    <FaClipboardList className="mr-2 text-indigo-600" /> Purchase & Customer Orders
                                 </h2>
-                                <p className="text-xs text-gray-500 mt-0.5">Manage stock inventory procurement from suppliers</p>
+                                <p className="text-xs text-gray-500 mt-0.5">Manage stock inventory procurement and customer orders</p>
                             </div>
 
                             <div className="flex flex-col sm:flex-row items-center gap-3">
                                 <Input
-                                    placeholder="Search order #, supplier, or product..."
+                                    placeholder="Search order #, supplier, customer, or product..."
                                     value={search}
                                     onChange={handleSearchChange}
-                                    addClass="w-full sm:w-64"
+                                    addClass="w-full sm:w-72"
                                 />
                                 <Link
                                     href={route('orders.create')}
@@ -382,7 +410,7 @@ export default function OrderIndex({ orders, summary, suppliers, products, filte
                                                 <th className="py-3 px-4 w-8"></th>
                                                 <th className="py-3 px-4">Order #</th>
                                                 <th className="py-3 px-4">Date</th>
-                                                <th className="py-3 px-4">Supplier</th>
+                                                <th className="py-3 px-4">Party / Contact</th>
                                                 <th className="py-3 px-4">Status</th>
                                                 <th className="py-3 px-4">Purchased Items</th>
                                                 <th className="py-3 px-4 text-right">Total Cost (₹)</th>
@@ -395,41 +423,63 @@ export default function OrderIndex({ orders, summary, suppliers, products, filte
                                                 const totalPkts = order.items.reduce((sum, i) => sum + i.quantity, 0);
 
                                                 return (
-                                                    <React.Fragment key={order.id}>
-                                                        <tr className="hover:bg-gray-50/80 transition-colors">
-                                                            <td className="py-3.5 px-4 text-center">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
-                                                                    className="text-gray-400 hover:text-indigo-600 p-1"
-                                                                >
-                                                                    {isExpanded ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
-                                                                </button>
-                                                            </td>
-                                                            <td className="py-3.5 px-4 font-mono font-bold text-gray-900 text-xs">
-                                                                {order.order_number}
-                                                            </td>
-                                                            <td className="py-3.5 px-4 font-mono text-gray-700 text-xs">
-                                                                <div className="flex items-center">
-                                                                    <FaCalendarAlt className="mr-1.5 text-gray-400" size={12} />
-                                                                    {order.order_date}
-                                                                </div>
-                                                            </td>
-                                                            <td className="py-3.5 px-4">
-                                                                <div className="flex items-center">
-                                                                    <div className="h-7 w-7 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold mr-2">
-                                                                        <FaTruck size={10} />
-                                                                    </div>
-                                                                    <div>
-                                                                        <span className="font-bold text-gray-900 block text-xs">
-                                                                            {order.supplier ? order.supplier.name : 'General Supplier'}
-                                                                        </span>
-                                                                        {order.supplier?.company_name && (
-                                                                            <span className="text-[11px] text-gray-400">{order.supplier.company_name}</span>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            </td>
+                                                     <React.Fragment key={order.id}>
+                                                         <tr className="hover:bg-gray-50/80 transition-colors">
+                                                             <td className="py-3.5 px-4 text-center">
+                                                                 <button
+                                                                     type="button"
+                                                                     onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
+                                                                     className="text-gray-400 hover:text-indigo-600 p-1"
+                                                                 >
+                                                                     {isExpanded ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
+                                                                 </button>
+                                                             </td>
+                                                             <td className="py-3.5 px-4 font-mono font-bold text-gray-900 text-xs">
+                                                                 {order.order_number}
+                                                             </td>
+                                                             <td className="py-3.5 px-4 font-mono text-gray-700 text-xs">
+                                                                 <div className="flex items-center">
+                                                                     <FaCalendarAlt className="mr-1.5 text-gray-400" size={12} />
+                                                                     {order.order_date}
+                                                                 </div>
+                                                             </td>
+                                                             <td className="py-3.5 px-4">
+                                                                 <div className="flex flex-col gap-1">
+                                                                     {order.supplier && (
+                                                                         <div className="flex items-center">
+                                                                             <div className="h-6 w-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold mr-1.5 shrink-0" title="Supplier">
+                                                                                 <FaTruck size={10} />
+                                                                             </div>
+                                                                             <div className="min-w-0">
+                                                                                 <span className="font-bold text-gray-900 block text-xs truncate">
+                                                                                     {order.supplier.name}
+                                                                                 </span>
+                                                                                 {order.supplier?.company_name && (
+                                                                                     <span className="text-[10px] text-gray-400 block truncate">{order.supplier.company_name}</span>
+                                                                                 )}
+                                                                             </div>
+                                                                         </div>
+                                                                     )}
+                                                                     {order.customer && (
+                                                                         <div className="flex items-center">
+                                                                             <div className="h-6 w-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs font-bold mr-1.5 shrink-0" title="Customer">
+                                                                                 <FaUser size={10} />
+                                                                             </div>
+                                                                             <div className="min-w-0">
+                                                                                 <span className="font-bold text-gray-900 block text-xs truncate">
+                                                                                     {order.customer.name}
+                                                                                 </span>
+                                                                                 {order.customer?.shop_name && (
+                                                                                     <span className="text-[10px] text-emerald-600 block truncate">{order.customer.shop_name}</span>
+                                                                                 )}
+                                                                             </div>
+                                                                         </div>
+                                                                     )}
+                                                                     {!order.supplier && !order.customer && (
+                                                                         <span className="text-xs text-gray-400 italic">Direct / Open</span>
+                                                                     )}
+                                                                 </div>
+                                                             </td>
                                                             <td className="py-3.5 px-4">
                                                                 <div className="flex items-center space-x-1.5">
                                                                     {renderStatusBadge(order.status)}

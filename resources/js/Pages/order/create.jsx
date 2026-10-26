@@ -11,6 +11,7 @@ import {
     FaPlus,
     FaTrash,
     FaTruck,
+    FaUser,
     FaCalendarAlt,
     FaRupeeSign,
     FaBoxes,
@@ -24,7 +25,7 @@ import {
 } from 'react-icons/fa';
 import { MdDeleteOutline } from 'react-icons/md';
 
-export default function CreateOrder({ suppliers = [], products = [], order = null, isEdit = false }) {
+export default function CreateOrder({ suppliers = [], customers = [], products = [], order = null, isEdit = false }) {
     const current_dokan = usePage().props.auth.current_dokan;
 
     const getTodayDate = () => new Date().toISOString().split('T')[0];
@@ -75,7 +76,8 @@ export default function CreateOrder({ suppliers = [], products = [], order = nul
     }, [isEdit, order]);
 
     const { data, setData, post, put, errors, processing } = useForm({
-        supplier_id: isEdit && order?.supplier_id ? String(order.supplier_id) : (suppliers.length === 1 ? String(suppliers[0].id) : ''),
+        supplier_id: isEdit && order?.supplier_id ? String(order.supplier_id) : '',
+        customer_id: isEdit && order?.customer_id ? String(order.customer_id) : '',
         order_date: isEdit && order?.order_date ? order.order_date : getTodayDate(),
         status: isEdit && order?.status ? order.status : 'pending',
         notes: isEdit && order?.notes ? order.notes : '',
@@ -88,6 +90,11 @@ export default function CreateOrder({ suppliers = [], products = [], order = nul
         if (!data.supplier_id) return null;
         return suppliers.find(s => String(s.id) === String(data.supplier_id)) || null;
     }, [suppliers, data.supplier_id]);
+
+    const selectedCustomer = useMemo(() => {
+        if (!data.customer_id) return null;
+        return customers.find(c => String(c.id) === String(data.customer_id)) || null;
+    }, [customers, data.customer_id]);
 
     // Handle Quick Add Product from Catalog
     const handleAddQuickProduct = () => {
@@ -219,6 +226,17 @@ export default function CreateOrder({ suppliers = [], products = [], order = nul
         }));
     }, [suppliers]);
 
+    // Customer options for SearchableSelect
+    const customerOptions = useMemo(() => {
+        return customers.map(c => ({
+            id: c.id,
+            name: c.name,
+            subtitle: [c.shop_name, c.phone].filter(Boolean).join(' • '),
+            shop_name: c.shop_name,
+            phone: c.phone,
+        }));
+    }, [customers]);
+
     // Product options for Quick Add & item rows with description & stock
     const productOptions = useMemo(() => {
         return products.map(p => ({
@@ -276,14 +294,14 @@ export default function CreateOrder({ suppliers = [], products = [], order = nul
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Main Procurement Details (Left 2 Columns) */}
                         <div className="lg:col-span-2 space-y-6">
-                            {/* Supplier & Order Info Card */}
+                            {/* Supplier & Customer Order Info Card */}
                             <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-xs">
                                 <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4 flex items-center">
-                                    <FaTruck className="mr-2 text-indigo-500" /> Supplier & Order Details
+                                    <FaClipboardList className="mr-2 text-indigo-500" /> Order Details & Contact Information
                                 </h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                     {/* Supplier Selector */}
-                                    <div className="sm:col-span-1">
+                                    <div>
                                         <div className="flex items-center justify-between mb-1">
                                             <label htmlFor="supplier_id" className="block text-xs font-medium text-gray-700">
                                                 Supplier / Vendor
@@ -302,18 +320,53 @@ export default function CreateOrder({ suppliers = [], products = [], order = nul
                                             options={supplierOptions}
                                             value={data.supplier_id}
                                             onChange={(val) => setData('supplier_id', val)}
-                                            placeholder="Select Supplier (Optional)"
-                                            searchPlaceholder="Search supplier by name, company, phone..."
+                                            placeholder="Supplier (Optional)"
+                                            searchPlaceholder="Search supplier..."
                                             emptyOption={{
                                                 id: '',
-                                                name: 'Direct / Open Purchase',
-                                                subtitle: 'No specific supplier linkage'
+                                                name: 'No Supplier Linked',
+                                                subtitle: 'Direct or customer-only order'
                                             }}
                                             icon={FaTruck}
                                             error={Boolean(errors.supplier_id)}
                                         />
                                         {errors.supplier_id && (
                                             <p className="text-xs text-red-600 mt-1">{errors.supplier_id}</p>
+                                        )}
+                                    </div>
+
+                                    {/* Customer Selector */}
+                                    <div>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label htmlFor="customer_id" className="block text-xs font-medium text-gray-700">
+                                                Customer
+                                            </label>
+                                            <Link
+                                                href={route('coustomers.index')}
+                                                target="_blank"
+                                                className="text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 transition-colors"
+                                                title="Manage customers in new tab"
+                                            >
+                                                <FaPlus size={9} /> Manage
+                                            </Link>
+                                        </div>
+                                        <SearchableSelect
+                                            id="customer_id"
+                                            options={customerOptions}
+                                            value={data.customer_id}
+                                            onChange={(val) => setData('customer_id', val)}
+                                            placeholder="Customer (Optional)"
+                                            searchPlaceholder="Search customer by name, shop, phone..."
+                                            emptyOption={{
+                                                id: '',
+                                                name: 'No Customer Linked',
+                                                subtitle: 'Supplier restocking / general order'
+                                            }}
+                                            icon={FaUser}
+                                            error={Boolean(errors.customer_id)}
+                                        />
+                                        {errors.customer_id && (
+                                            <p className="text-xs text-red-600 mt-1">{errors.customer_id}</p>
                                         )}
                                     </div>
 
@@ -351,7 +404,7 @@ export default function CreateOrder({ suppliers = [], products = [], order = nul
                                             required
                                         >
                                             <option value="pending">Pending (Draft)</option>
-                                            <option value="ordered">Ordered (With Supplier)</option>
+                                            <option value="ordered">Ordered</option>
                                             <option value="received">Received (Adds Stock & Products)</option>
                                             <option value="cancelled">Cancelled</option>
                                         </select>
@@ -361,28 +414,56 @@ export default function CreateOrder({ suppliers = [], products = [], order = nul
                                     </div>
                                 </div>
 
-                                {/* Selected Supplier Quick Info Card */}
-                                {selectedSupplier && (
-                                    <div className="mt-3 p-3 bg-indigo-50/60 rounded-lg border border-indigo-100 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                        <div className="min-w-0">
-                                            <div className="font-bold text-gray-900 flex items-center gap-2 truncate">
-                                                <span>{selectedSupplier.name}</span>
-                                                {selectedSupplier.company_name && (
-                                                    <span className="text-[10px] bg-indigo-100 text-indigo-800 font-semibold px-2 py-0.5 rounded">
-                                                        <FaStore className="inline mr-1" size={10} />
-                                                        {selectedSupplier.company_name}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            {selectedSupplier.phone && (
-                                                <div className="text-[11px] text-gray-600 mt-0.5">
-                                                    Phone: <span className="font-mono">{selectedSupplier.phone}</span>
+                                {/* Selected Contact Info Cards */}
+                                {(selectedSupplier || selectedCustomer) && (
+                                    <div className="mt-3.5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {selectedSupplier && (
+                                            <div className="p-3 bg-indigo-50/60 rounded-lg border border-indigo-100 text-xs flex items-center justify-between gap-2">
+                                                <div className="min-w-0">
+                                                    <div className="font-bold text-gray-900 flex items-center gap-1.5 truncate">
+                                                        <FaTruck className="text-indigo-600 shrink-0" size={11} />
+                                                        <span className="truncate">{selectedSupplier.name}</span>
+                                                        {selectedSupplier.company_name && (
+                                                            <span className="text-[10px] bg-indigo-100 text-indigo-800 font-semibold px-1.5 py-0.5 rounded truncate">
+                                                                {selectedSupplier.company_name}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {selectedSupplier.phone && (
+                                                        <div className="text-[11px] text-gray-500 mt-0.5">
+                                                            Phone: <span className="font-mono">{selectedSupplier.phone}</span>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )}
-                                        </div>
-                                        <span className="text-[11px] font-medium text-indigo-700 bg-white px-2 py-1 rounded border border-indigo-200 shrink-0">
-                                            Supplier Selected
-                                        </span>
+                                                <span className="text-[10px] font-semibold text-indigo-700 bg-white px-2 py-0.5 rounded border border-indigo-200 shrink-0">
+                                                    Supplier
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {selectedCustomer && (
+                                            <div className="p-3 bg-emerald-50/60 rounded-lg border border-emerald-100 text-xs flex items-center justify-between gap-2">
+                                                <div className="min-w-0">
+                                                    <div className="font-bold text-gray-900 flex items-center gap-1.5 truncate">
+                                                        <FaUser className="text-emerald-600 shrink-0" size={11} />
+                                                        <span className="truncate">{selectedCustomer.name}</span>
+                                                        {selectedCustomer.shop_name && (
+                                                            <span className="text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-1.5 py-0.5 rounded truncate">
+                                                                {selectedCustomer.shop_name}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {selectedCustomer.phone && (
+                                                        <div className="text-[11px] text-gray-500 mt-0.5">
+                                                            Phone: <span className="font-mono">{selectedCustomer.phone}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <span className="text-[10px] font-semibold text-emerald-700 bg-white px-2 py-0.5 rounded border border-emerald-200 shrink-0">
+                                                    Customer
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
