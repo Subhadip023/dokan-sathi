@@ -1,11 +1,11 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import SearchableSelect from '@/Components/SearchableSelect';
-import { FaShoppingCart, FaArrowLeft, FaPlus, FaTrash, FaUser, FaCalendarAlt, FaRupeeSign, FaBoxes, FaReceipt, FaTag } from 'react-icons/fa';
+import { FaShoppingCart, FaArrowLeft, FaPlus, FaTrash, FaUser, FaCalendarAlt, FaRupeeSign, FaBoxes, FaReceipt, FaTag, FaKeyboard, FaTimes } from 'react-icons/fa';
 
 export default function CreateSale({ products, customers }) {
     const current_dokan = usePage().props.auth.current_dokan;
@@ -13,7 +13,7 @@ export default function CreateSale({ products, customers }) {
     const getTodayDate = () => new Date().toISOString().split('T')[0];
 
     const createInitialItem = (productId = '') => ({
-        product_id: productId || (products.length > 0 ? products[0].id : ''),
+        product_id: productId || '',
         qty: 1,
         discount: 0,
     });
@@ -28,6 +28,13 @@ export default function CreateSale({ products, customers }) {
         items: [createInitialItem()],
     });
 
+    // Refs for keyboard shortcuts (strictly max 2 keys)
+    const quickProductSelectRef = useRef(null);
+    const customerSelectRef = useRef(null);
+    const orderDiscountRef = useRef(null);
+    const paidAmountRef = useRef(null);
+    const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+
     // Quick add product from search/dropdown selector
     const [quickSelectedProductId, setQuickSelectedProductId] = useState('');
 
@@ -36,17 +43,24 @@ export default function CreateSale({ products, customers }) {
         return customers.find(c => String(c.id) === String(data.customer_id)) || null;
     }, [customers, data.customer_id]);
 
-    const handleAddQuickProduct = () => {
-        if (!quickSelectedProductId) return;
+    const handleAddQuickProduct = (productIdOverride = null) => {
+        const prodId = productIdOverride || quickSelectedProductId;
+        if (!prodId) return;
+
         // Check if already in cart, if so increase qty
-        const existingIdx = data.items.findIndex(item => String(item.product_id) === String(quickSelectedProductId));
+        const existingIdx = data.items.findIndex(item => String(item.product_id) === String(prodId));
         if (existingIdx >= 0) {
             const newItems = [...data.items];
             newItems[existingIdx].qty = (parseInt(newItems[existingIdx].qty) || 0) + 1;
             setData('items', newItems);
             toast.success('Product quantity increased');
         } else {
-            setData('items', [...data.items, createInitialItem(quickSelectedProductId)]);
+            // If invoice has only 1 item and it has no product selected, replace it
+            if (data.items.length === 1 && !data.items[0].product_id) {
+                setData('items', [createInitialItem(prodId)]);
+            } else {
+                setData('items', [...data.items, createInitialItem(prodId)]);
+            }
             toast.success('Product added to invoice');
         }
         setQuickSelectedProductId('');
@@ -58,7 +72,12 @@ export default function CreateSale({ products, customers }) {
 
     const removeItemRow = (index) => {
         if (data.items.length <= 1) {
-            toast.error('Invoice must contain at least one product');
+            if (data.items[0].product_id) {
+                setData('items', [createInitialItem('')]);
+                toast.success('Product selection cleared');
+            } else {
+                toast.error('Invoice must contain at least one product row');
+            }
             return;
         }
         const newItems = data.items.filter((_, i) => i !== index);
@@ -132,9 +151,17 @@ export default function CreateSale({ products, customers }) {
     }, [grandTotals.grandTotal, data.payment_status, data.paid_amount]);
 
     const handleSubmitSale = (e) => {
-        e.preventDefault();
+        if (e && typeof e.preventDefault === 'function') {
+            e.preventDefault();
+        }
 
         // Validate items
+        const validItems = data.items.filter(item => item.product_id);
+        if (validItems.length === 0) {
+            toast.error('Please select at least one product before saving invoice.');
+            return;
+        }
+
         const invalidItem = data.items.find(item => !item.product_id || item.qty <= 0);
         if (invalidItem) {
             toast.error('Please select valid products and positive quantity for all items.');
@@ -151,6 +178,112 @@ export default function CreateSale({ products, customers }) {
             }
         });
     };
+
+    // Keyboard Shortcuts Listener (Strictly Alt + Key only, NO function keys)
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            // Escape: Close help modal
+            if (e.key === 'Escape') {
+                if (showShortcutsModal) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowShortcutsModal(false);
+                    return;
+                }
+            }
+
+            // Must have Alt key pressed
+            if (!e.altKey) return;
+
+            const code = e.code || '';
+            const key = (e.key || '').toLowerCase();
+            const isMatch = (targetCode, targetChar) => code === targetCode || key === targetChar;
+
+            // Alt + H: Toggle shortcuts guide modal
+            if (isMatch('KeyH', 'h')) {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowShortcutsModal(prev => !prev);
+                return;
+            }
+
+            // Alt + P: Focus Quick Add Product
+            if (isMatch('KeyP', 'p')) {
+                e.preventDefault();
+                e.stopPropagation();
+                quickProductSelectRef.current?.focus();
+                return;
+            }
+
+            // Alt + C: Focus Customer selector
+            if (isMatch('KeyC', 'c')) {
+                e.preventDefault();
+                e.stopPropagation();
+                customerSelectRef.current?.focus();
+                return;
+            }
+
+            // Alt + S: Submit / Complete Sale
+            if (isMatch('KeyS', 's')) {
+                e.preventDefault();
+                e.stopPropagation();
+                handleSubmitSale();
+                return;
+            }
+
+            // Alt + N: Add Another Product Row
+            if (isMatch('KeyN', 'n')) {
+                e.preventDefault();
+                e.stopPropagation();
+                addItemRow();
+                toast.success('New product row added');
+                return;
+            }
+
+            // Alt + D: Focus Overall Order Discount
+            if (isMatch('KeyD', 'd')) {
+                e.preventDefault();
+                e.stopPropagation();
+                orderDiscountRef.current?.focus();
+                orderDiscountRef.current?.select?.();
+                return;
+            }
+
+            // Alt + 1: Full Paid
+            if (isMatch('Digit1', '1')) {
+                e.preventDefault();
+                e.stopPropagation();
+                setData('payment_status', 'full_paid');
+                toast('Payment status: Full Paid', { icon: '💳' });
+                return;
+            }
+
+            // Alt + 2: Partial Paid
+            if (isMatch('Digit2', '2')) {
+                e.preventDefault();
+                e.stopPropagation();
+                setData('payment_status', 'partially_paid');
+                toast('Payment status: Partial', { icon: '📝' });
+                setTimeout(() => {
+                    paidAmountRef.current?.focus();
+                    paidAmountRef.current?.select?.();
+                }, 80);
+                return;
+            }
+
+            // Alt + 3: Credit / Due
+            if (isMatch('Digit3', '3')) {
+                e.preventDefault();
+                e.stopPropagation();
+                setData('payment_status', 'credit');
+                toast('Payment status: Credit / Due', { icon: '⏳' });
+                return;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown, true);
+        return () => window.removeEventListener('keydown', handleKeyDown, true);
+    }, [showShortcutsModal, data, products]);
 
     return (
         <AuthenticatedLayout header="Record New Sale">
@@ -174,6 +307,18 @@ export default function CreateSale({ products, customers }) {
                             <p className="text-xs text-gray-500">Record a new sale transaction for multiple products</p>
                         </div>
                     </div>
+                    <button
+                        type="button"
+                        onClick={() => setShowShortcutsModal(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition-colors shadow-2xs text-xs font-semibold"
+                        title="View keyboard shortcuts (Alt+H)"
+                    >
+                        <FaKeyboard size={14} />
+                        <span>Shortcuts</span>
+                        <kbd className="ml-1 px-1.5 py-0.5 text-[10px] bg-white border border-indigo-200 rounded font-mono font-bold text-indigo-600 shadow-2xs">
+                            Alt + H
+                        </kbd>
+                    </button>
                 </div>
 
                 <form onSubmit={handleSubmitSale}>
@@ -208,8 +353,11 @@ export default function CreateSale({ products, customers }) {
 
                                     <div>
                                         <div className="flex items-center justify-between mb-1">
-                                            <label htmlFor="customer_id" className="block text-xs font-medium text-gray-700">
-                                                Customer Name
+                                            <label htmlFor="customer_id" className="flex items-center gap-1.5 text-xs font-medium text-gray-700">
+                                                <span>Customer Name</span>
+                                                <kbd className="px-1.5 py-0.5 text-[10px] bg-gray-100 text-gray-600 rounded border border-gray-300 font-mono font-bold whitespace-nowrap shrink-0" title="Press Alt+C">
+                                                    Alt+C
+                                                </kbd>
                                             </label>
                                             <Link
                                                 href={route('coustomers.create')}
@@ -221,12 +369,13 @@ export default function CreateSale({ products, customers }) {
                                             </Link>
                                         </div>
                                         <SearchableSelect
+                                            ref={customerSelectRef}
                                             id="customer_id"
                                             options={customers}
                                             value={data.customer_id}
                                             onChange={(val) => setData('customer_id', val)}
                                             placeholder="Walk-in / Cash Customer"
-                                            searchPlaceholder="Search customer by name, phone, shop..."
+                                            searchPlaceholder="Search customer by name, phone, shop... (Alt+C)"
                                             emptyOption={{ id: '', name: 'Walk-in / Cash Customer', subtitle: 'Standard counter sale (no customer account)' }}
                                             icon={FaUser}
                                             error={Boolean(errors.customer_id)}
@@ -281,18 +430,30 @@ export default function CreateSale({ products, customers }) {
                                 {products.length > 0 && (
                                     <div className="bg-indigo-50/60 p-3.5 rounded-xl border border-indigo-100 mb-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                                         <div className="flex-1 min-w-0">
-                                            <span className="text-xs font-bold text-indigo-900 block mb-1">Quick Add Product to Cart</span>
+                                            <div className="flex items-center gap-1.5 mb-1">
+                                                <span className="text-xs font-bold text-indigo-900">Quick Add Product to Cart</span>
+                                                <kbd className="px-1.5 py-0.5 text-[10px] bg-indigo-100 text-indigo-700 rounded border border-indigo-200 font-mono font-bold" title="Press Alt+P">
+                                                    Alt + P
+                                                </kbd>
+                                            </div>
                                             <SearchableSelect
+                                                ref={quickProductSelectRef}
                                                 options={products}
                                                 value={quickSelectedProductId}
-                                                onChange={(val) => setQuickSelectedProductId(val)}
-                                                placeholder="Search product name, description..."
+                                                onChange={(val) => {
+                                                    if (val) {
+                                                        handleAddQuickProduct(val);
+                                                    } else {
+                                                        setQuickSelectedProductId('');
+                                                    }
+                                                }}
+                                                placeholder="Search product name, description... (Press Alt+P to focus)"
                                             />
                                         </div>
                                         <div className="sm:self-end shrink-0">
                                             <button
                                                 type="button"
-                                                onClick={handleAddQuickProduct}
+                                                onClick={() => handleAddQuickProduct()}
                                                 disabled={!quickSelectedProductId}
                                                 className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center justify-center transition-colors shadow-xs"
                                             >
@@ -394,9 +555,9 @@ export default function CreateSale({ products, customers }) {
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => removeItemRow(idx)}
-                                                                        disabled={data.items.length <= 1}
-                                                                        className={`p-1.5 rounded-md transition-colors ${data.items.length <= 1 ? 'text-gray-300 cursor-not-allowed' : 'text-red-500 hover:bg-red-50'}`}
-                                                                        title="Remove item"
+                                                                        disabled={data.items.length <= 1 && !item.product_id}
+                                                                        className={`p-1.5 rounded-md transition-colors ${data.items.length <= 1 && !item.product_id ? 'text-gray-300 cursor-not-allowed' : 'text-red-500 hover:bg-red-50'}`}
+                                                                        title={data.items.length <= 1 ? (item.product_id ? 'Clear product selection' : 'Empty item') : 'Remove item'}
                                                                     >
                                                                         <FaTrash size={13} />
                                                                     </button>
@@ -412,9 +573,14 @@ export default function CreateSale({ products, customers }) {
                                             <button
                                                 type="button"
                                                 onClick={addItemRow}
-                                                className="w-full py-2.5 bg-gray-50 hover:bg-gray-100 border border-dashed border-gray-300 text-gray-700 text-xs font-semibold rounded-lg flex items-center justify-center transition-colors"
+                                                className="w-full py-2.5 bg-gray-50 hover:bg-gray-100 border border-dashed border-gray-300 text-gray-700 text-xs font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors"
                                             >
-                                                <FaPlus className="mr-1.5" size={11} /> Add Another Product Row
+                                                <span className="flex items-center">
+                                                    <FaPlus className="mr-1.5" size={11} /> Add Another Product Row
+                                                </span>
+                                                <kbd className="px-1.5 py-0.5 text-[10px] bg-white border border-gray-300 rounded font-mono text-gray-600 font-bold shadow-2xs">
+                                                    Alt + N
+                                                </kbd>
                                             </button>
                                         </div>
                                     </div>
@@ -449,10 +615,16 @@ export default function CreateSale({ products, customers }) {
 
                                     {/* Overall Order Discount Input Box */}
                                     <div className="pt-2 border-t border-gray-100">
-                                        <label htmlFor="order_discount" className="block text-xs font-semibold text-indigo-900 mb-1 flex items-center">
-                                            <FaTag className="mr-1 text-indigo-500" size={11} /> Overall Order Discount (₹)
-                                        </label>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label htmlFor="order_discount" className="text-xs font-semibold text-indigo-900 flex items-center">
+                                                <FaTag className="mr-1 text-indigo-500" size={11} /> Overall Order Discount (₹)
+                                            </label>
+                                            <kbd className="px-1.5 py-0.5 text-[10px] bg-indigo-50 border border-indigo-200 rounded font-mono text-indigo-700 font-bold shadow-2xs" title="Press Alt+D">
+                                                Alt + D
+                                            </kbd>
+                                        </div>
                                         <input
+                                            ref={orderDiscountRef}
                                             type="number"
                                             id="order_discount"
                                             step="0.01"
@@ -495,33 +667,54 @@ export default function CreateSale({ products, customers }) {
                                             <button
                                                 type="button"
                                                 onClick={() => setData('payment_status', 'full_paid')}
-                                                className={`py-2 px-2 rounded-lg font-bold border transition-colors ${data.payment_status === 'full_paid' ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                                                className={`py-2 px-1.5 rounded-lg font-bold border transition-colors flex flex-col items-center justify-center gap-0.5 ${data.payment_status === 'full_paid' ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                                             >
-                                                Full Paid
+                                                <span>Full Paid</span>
+                                                <kbd className={`text-[9px] font-mono px-1 py-0.2 rounded font-semibold ${data.payment_status === 'full_paid' ? 'bg-emerald-700 text-emerald-100' : 'bg-gray-200 text-gray-600'}`}>
+                                                    Alt + 1
+                                                </kbd>
                                             </button>
                                             <button
                                                 type="button"
-                                                onClick={() => setData('payment_status', 'partially_paid')}
-                                                className={`py-2 px-2 rounded-lg font-bold border transition-colors ${data.payment_status === 'partially_paid' ? 'bg-amber-500 text-white border-amber-500 shadow-xs' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                                                onClick={() => {
+                                                    setData('payment_status', 'partially_paid');
+                                                    setTimeout(() => {
+                                                        paidAmountRef.current?.focus();
+                                                        paidAmountRef.current?.select?.();
+                                                    }, 80);
+                                                }}
+                                                className={`py-2 px-1.5 rounded-lg font-bold border transition-colors flex flex-col items-center justify-center gap-0.5 ${data.payment_status === 'partially_paid' ? 'bg-amber-500 text-white border-amber-500 shadow-xs' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                                             >
-                                                Partial
+                                                <span>Partial</span>
+                                                <kbd className={`text-[9px] font-mono px-1 py-0.2 rounded font-semibold ${data.payment_status === 'partially_paid' ? 'bg-amber-600 text-amber-100' : 'bg-gray-200 text-gray-600'}`}>
+                                                    Alt + 2
+                                                </kbd>
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={() => setData('payment_status', 'credit')}
-                                                className={`py-2 px-2 rounded-lg font-bold border transition-colors ${data.payment_status === 'credit' ? 'bg-red-600 text-white border-red-600 shadow-xs' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                                                className={`py-2 px-1.5 rounded-lg font-bold border transition-colors flex flex-col items-center justify-center gap-0.5 ${data.payment_status === 'credit' ? 'bg-red-600 text-white border-red-600 shadow-xs' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                                             >
-                                                Credit / Due
+                                                <span>Credit / Due</span>
+                                                <kbd className={`text-[9px] font-mono px-1 py-0.2 rounded font-semibold ${data.payment_status === 'credit' ? 'bg-red-700 text-red-100' : 'bg-gray-200 text-gray-600'}`}>
+                                                    Alt + 3
+                                                </kbd>
                                             </button>
                                         </div>
 
                                         {data.payment_status === 'partially_paid' && (
                                             <div className="bg-amber-50 p-3 rounded-lg border border-amber-200 space-y-2 text-xs">
                                                 <div>
-                                                    <label htmlFor="paid_amount" className="block font-bold text-amber-900 mb-1">
-                                                        Amount Paid Now (₹)
-                                                    </label>
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <label htmlFor="paid_amount" className="font-bold text-amber-900">
+                                                            Amount Paid Now (₹)
+                                                        </label>
+                                                        <kbd className="px-1.5 py-0.2 text-[9px] bg-amber-100 text-amber-800 rounded border border-amber-200 font-mono">
+                                                            Alt + 2
+                                                        </kbd>
+                                                    </div>
                                                     <input
+                                                        ref={paidAmountRef}
                                                         type="number"
                                                         id="paid_amount"
                                                         step="0.01"
@@ -556,10 +749,14 @@ export default function CreateSale({ products, customers }) {
                                 <div className="mt-6 space-y-3">
                                     <PrimaryButton
                                         type="submit"
-                                        disabled={processing || products.length === 0}
-                                        className="w-full py-3 justify-center text-sm font-bold shadow-md bg-emerald-600 hover:bg-emerald-700"
+                                        disabled={processing || products.length === 0 || !data.items.some(i => i.product_id)}
+                                        className="w-full py-3 justify-center text-sm font-bold shadow-md bg-emerald-600 hover:bg-emerald-700 flex items-center justify-center gap-2"
                                     >
-                                        <FaShoppingCart className="mr-2" /> Complete & Save Sale
+                                        <FaShoppingCart className="mr-1" />
+                                        <span>Complete & Save Sale</span>
+                                        <kbd className="ml-1 px-1.5 py-0.5 text-[10px] bg-emerald-800 text-emerald-100 rounded border border-emerald-500/50 font-mono font-bold shadow-xs">
+                                            Alt + S
+                                        </kbd>
                                     </PrimaryButton>
 
                                     <Link
@@ -573,6 +770,120 @@ export default function CreateSale({ products, customers }) {
                         </div>
                     </div>
                 </form>
+
+                {/* Keyboard Shortcuts Help Modal (Alt+H) */}
+                {showShortcutsModal && (
+                    <div
+                        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+                        onClick={() => setShowShortcutsModal(false)}
+                    >
+                        <div
+                            className="bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-lg w-full p-6 animate-in zoom-in-95 duration-150"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                                        <FaKeyboard size={18} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-base font-bold text-gray-900">Billing Keyboard Shortcuts</h3>
+                                        <p className="text-xs text-gray-500">Fast counter checkout (Alt + key shortcuts)</p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowShortcutsModal(false)}
+                                    className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                                    title="Close (Esc)"
+                                >
+                                    <FaTimes size={14} />
+                                </button>
+                            </div>
+
+                            <div className="mt-4 space-y-4 max-h-[70vh] overflow-y-auto pr-1 text-xs">
+                                {/* Navigation */}
+                                <div>
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Search & Focus</div>
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 hover:bg-indigo-50/50 transition-colors">
+                                            <span className="text-gray-700 font-medium">Focus Quick Product Search</span>
+                                            <kbd className="px-2 py-0.5 bg-white border border-gray-300 rounded font-mono font-bold shadow-2xs">Alt + P</kbd>
+                                        </div>
+                                        <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 hover:bg-indigo-50/50 transition-colors">
+                                            <span className="text-gray-700 font-medium">Focus Customer Selector</span>
+                                            <kbd className="px-2 py-0.5 bg-white border border-gray-300 rounded font-mono font-bold shadow-2xs">Alt + C</kbd>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Items & Rows */}
+                                <div>
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Cart & Discount</div>
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 hover:bg-indigo-50/50 transition-colors">
+                                            <span className="text-gray-700 font-medium">Add Another Product Row</span>
+                                            <kbd className="px-2 py-0.5 bg-white border border-gray-300 rounded font-mono font-bold shadow-2xs">Alt + N</kbd>
+                                        </div>
+                                        <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 hover:bg-indigo-50/50 transition-colors">
+                                            <span className="text-gray-700 font-medium">Focus Overall Discount</span>
+                                            <kbd className="px-2 py-0.5 bg-white border border-gray-300 rounded font-mono font-bold shadow-2xs">Alt + D</kbd>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Payments */}
+                                <div>
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Payment Status</div>
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 hover:bg-indigo-50/50 transition-colors">
+                                            <span className="text-gray-700 font-medium">Set Full Paid</span>
+                                            <kbd className="px-2 py-0.5 bg-white border border-gray-300 rounded font-mono font-bold shadow-2xs">Alt + 1</kbd>
+                                        </div>
+                                        <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 hover:bg-indigo-50/50 transition-colors">
+                                            <span className="text-gray-700 font-medium">Set Partial Paid (Focus Paid Amount)</span>
+                                            <kbd className="px-2 py-0.5 bg-white border border-gray-300 rounded font-mono font-bold shadow-2xs">Alt + 2</kbd>
+                                        </div>
+                                        <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 hover:bg-indigo-50/50 transition-colors">
+                                            <span className="text-gray-700 font-medium">Set Credit / Due</span>
+                                            <kbd className="px-2 py-0.5 bg-white border border-gray-300 rounded font-mono font-bold shadow-2xs">Alt + 3</kbd>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Submission & Modal */}
+                                <div>
+                                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Save & Help</div>
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between p-2 rounded-lg bg-emerald-50/60 border border-emerald-100 transition-colors">
+                                            <span className="text-emerald-900 font-bold">Complete & Save Invoice</span>
+                                            <kbd className="px-2 py-0.5 bg-white border border-emerald-200 rounded font-mono font-bold shadow-2xs text-emerald-800">Alt + S</kbd>
+                                        </div>
+                                        <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 hover:bg-indigo-50/50 transition-colors">
+                                            <span className="text-gray-700 font-medium">Open / Close Shortcuts Help</span>
+                                            <kbd className="px-2 py-0.5 bg-white border border-gray-300 rounded font-mono font-bold shadow-2xs">Alt + H</kbd>
+                                        </div>
+                                        <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 hover:bg-indigo-50/50 transition-colors">
+                                            <span className="text-gray-700 font-medium">Close Modal / Popover</span>
+                                            <kbd className="px-2 py-0.5 bg-white border border-gray-300 rounded font-mono font-bold shadow-2xs">Esc</kbd>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-5 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                                <span>Tip: All shortcuts are Alt + key combinations.</span>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowShortcutsModal(false)}
+                                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors shadow-2xs"
+                                >
+                                    Got it
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </AuthenticatedLayout>
     );

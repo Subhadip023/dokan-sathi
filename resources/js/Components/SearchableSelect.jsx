@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { FaSearch, FaChevronDown, FaTimes, FaCheck, FaUser, FaStore, FaPhoneAlt } from 'react-icons/fa';
 
-export default function SearchableSelect({
+const SearchableSelect = forwardRef(function SearchableSelect({
     options = [],
     value = '',
     onChange,
@@ -16,13 +16,29 @@ export default function SearchableSelect({
     error = false,
     id,
     disabled = false,
-}) {
+}, ref) {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [highlightedIndex, setHighlightedIndex] = useState(0);
     const containerRef = useRef(null);
     const inputRef = useRef(null);
     const listRef = useRef(null);
+
+    useImperativeHandle(ref, () => ({
+        open: () => {
+            if (disabled) return;
+            setIsOpen(true);
+            setTimeout(() => inputRef.current?.focus(), 50);
+        },
+        focus: () => {
+            if (disabled) return;
+            setIsOpen(true);
+            setTimeout(() => inputRef.current?.focus(), 50);
+        },
+        close: () => {
+            setIsOpen(false);
+        }
+    }));
 
     // Combine emptyOption if provided and not already in options
     const allOptions = useMemo(() => {
@@ -392,4 +408,6 @@ export default function SearchableSelect({
             )}
         </div>
     );
-}
+});
+
+export default SearchableSelect;
