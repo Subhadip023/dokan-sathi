@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, forwardRef, useImperativeHandle } from 'react';
+import { createPortal } from 'react-dom';
 import { FaSearch, FaChevronDown, FaTimes, FaCheck, FaUser, FaStore, FaPhoneAlt } from 'react-icons/fa';
 
 const SearchableSelect = forwardRef(function SearchableSelect({
@@ -20,20 +21,46 @@ const SearchableSelect = forwardRef(function SearchableSelect({
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [highlightedIndex, setHighlightedIndex] = useState(0);
+    const [coords, setCoords] = useState({ top: 0, left: 0, width: 0, dropUp: false });
     const containerRef = useRef(null);
+    const dropdownRef = useRef(null);
     const inputRef = useRef(null);
     const listRef = useRef(null);
 
+    const updateCoords = () => {
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        if (rect.bottom < 0 || rect.top > window.innerHeight) {
+            setIsOpen(false);
+            return;
+        }
+
+        const estimatedDropdownHeight = 280;
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        const dropUp = spaceBelow < estimatedDropdownHeight && spaceAbove > spaceBelow;
+
+        setCoords({
+            top: dropUp ? Math.max(10, rect.top - 4) : rect.bottom + 4,
+            left: Math.max(8, Math.min(rect.left, window.innerWidth - (rect.width || 240) - 8)),
+            width: rect.width || 240,
+            dropUp,
+        });
+    };
+
+    const openDropdown = () => {
+        if (disabled) return;
+        updateCoords();
+        setIsOpen(true);
+        setTimeout(() => inputRef.current?.focus(), 50);
+    };
+
     useImperativeHandle(ref, () => ({
         open: () => {
-            if (disabled) return;
-            setIsOpen(true);
-            setTimeout(() => inputRef.current?.focus(), 50);
+            openDropdown();
         },
         focus: () => {
-            if (disabled) return;
-            setIsOpen(true);
-            setTimeout(() => inputRef.current?.focus(), 50);
+            openDropdown();
         },
         close: () => {
             setIsOpen(false);
@@ -99,10 +126,30 @@ const SearchableSelect = forwardRef(function SearchableSelect({
         }
     }, [highlightedIndex, isOpen, filteredOptions]);
 
+    // Reposition coordinates on scroll or resize
+    useEffect(() => {
+        if (!isOpen) return;
+        updateCoords();
+
+        const handleScrollOrResize = () => {
+            updateCoords();
+        };
+
+        window.addEventListener('scroll', handleScrollOrResize, true);
+        window.addEventListener('resize', handleScrollOrResize);
+
+        return () => {
+            window.removeEventListener('scroll', handleScrollOrResize, true);
+            window.removeEventListener('resize', handleScrollOrResize);
+        };
+    }, [isOpen]);
+
     // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (e) => {
-            if (containerRef.current && !containerRef.current.contains(e.target)) {
+            const inContainer = containerRef.current && containerRef.current.contains(e.target);
+            const inDropdown = dropdownRef.current && dropdownRef.current.contains(e.target);
+            if (!inContainer && !inDropdown) {
                 setIsOpen(false);
             }
         };
@@ -121,8 +168,7 @@ const SearchableSelect = forwardRef(function SearchableSelect({
         if (!isOpen) {
             if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                setIsOpen(true);
-                setTimeout(() => inputRef.current?.focus(), 50);
+                openDropdown();
             }
             return;
         }
@@ -301,10 +347,10 @@ const SearchableSelect = forwardRef(function SearchableSelect({
                 onKeyDown={handleKeyDown}
                 onClick={() => {
                     if (disabled) return;
-                    const nextState = !isOpen;
-                    setIsOpen(nextState);
-                    if (nextState) {
-                        setTimeout(() => inputRef.current?.focus(), 50);
+                    if (!isOpen) {
+                        openDropdown();
+                    } else {
+                        setIsOpen(false);
                     }
                 }}
                 className={`w-full flex items-center justify-between border rounded-lg px-3 py-2 text-xs cursor-pointer bg-white transition-all shadow-2xs ${
@@ -341,9 +387,20 @@ const SearchableSelect = forwardRef(function SearchableSelect({
                 </div>
             </div>
 
-            {/* Dropdown Menu */}
-            {isOpen && !disabled && (
-                <div className="absolute z-50 mt-1 w-full bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden text-xs animate-in fade-in zoom-in-95 duration-100">
+            {/* Dropdown Menu Portal */}
+            {isOpen && !disabled && typeof document !== 'undefined' && document.body && createPortal(
+                <div
+                    ref={dropdownRef}
+                    style={{
+                        position: 'fixed',
+                        top: `${coords.top}px`,
+                        left: `${coords.left}px`,
+                        width: `${coords.width}px`,
+                        transform: coords.dropUp ? 'translateY(-100%)' : 'none',
+                        zIndex: 99999,
+                    }}
+                    className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden text-xs animate-in fade-in zoom-in-95 duration-100"
+                >
                     {/* Search Field */}
                     <div className="p-2 border-b border-gray-100 bg-gray-50 flex items-center">
                         <FaSearch className="text-gray-400 mr-2 shrink-0" size={11} />
@@ -404,7 +461,8 @@ const SearchableSelect = forwardRef(function SearchableSelect({
                         <span>{filteredOptions.length} option{filteredOptions.length === 1 ? '' : 's'}</span>
                         <span className="hidden sm:inline">Use ↑ ↓ to navigate, Enter to select</span>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
