@@ -25,7 +25,7 @@ export default function CreateSale({ products, customers }) {
         order_discount: 0,
         payment_status: 'full_paid',
         paid_amount: '',
-        items: [createInitialItem()],
+        items: [],
     });
 
     // Refs for keyboard shortcuts (strictly max 2 keys)
@@ -55,12 +55,7 @@ export default function CreateSale({ products, customers }) {
             setData('items', newItems);
             toast.success('Product quantity increased');
         } else {
-            // If invoice has only 1 item and it has no product selected, replace it
-            if (data.items.length === 1 && !data.items[0].product_id) {
-                setData('items', [createInitialItem(prodId)]);
-            } else {
-                setData('items', [...data.items, createInitialItem(prodId)]);
-            }
+            setData('items', [...data.items, createInitialItem(prodId)]);
             toast.success('Product added to invoice');
         }
         setQuickSelectedProductId('');
@@ -71,17 +66,9 @@ export default function CreateSale({ products, customers }) {
     };
 
     const removeItemRow = (index) => {
-        if (data.items.length <= 1) {
-            if (data.items[0].product_id) {
-                setData('items', [createInitialItem('')]);
-                toast.success('Product selection cleared');
-            } else {
-                toast.error('Invoice must contain at least one product row');
-            }
-            return;
-        }
         const newItems = data.items.filter((_, i) => i !== index);
         setData('items', newItems);
+        toast.success('Product removed from invoice');
     };
 
     const updateItemRow = (index, field, value) => {
@@ -428,38 +415,26 @@ export default function CreateSale({ products, customers }) {
 
                                 {/* Quick Add Product Bar */}
                                 {products.length > 0 && (
-                                    <div className="bg-indigo-50/60 p-3.5 rounded-xl border border-indigo-100 mb-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-1.5 mb-1">
-                                                <span className="text-xs font-bold text-indigo-900">Quick Add Product to Cart</span>
-                                                <kbd className="px-1.5 py-0.5 text-[10px] bg-indigo-100 text-indigo-700 rounded border border-indigo-200 font-mono font-bold" title="Press Alt+P">
-                                                    Alt + P
-                                                </kbd>
-                                            </div>
-                                            <SearchableSelect
-                                                ref={quickProductSelectRef}
-                                                options={products}
-                                                value={quickSelectedProductId}
-                                                onChange={(val) => {
-                                                    if (val) {
-                                                        handleAddQuickProduct(val);
-                                                    } else {
-                                                        setQuickSelectedProductId('');
-                                                    }
-                                                }}
-                                                placeholder="Search product name, description... (Press Alt+P to focus)"
-                                            />
+                                    <div className="bg-indigo-50/60 p-3.5 rounded-xl border border-indigo-100 mb-4">
+                                        <div className="flex items-center gap-1.5 mb-1.5">
+                                            <span className="text-xs font-bold text-indigo-900">Quick Add Product to Cart</span>
+                                            <kbd className="px-1.5 py-0.5 text-[10px] bg-indigo-100 text-indigo-700 rounded border border-indigo-200 font-mono font-bold" title="Press Alt+P">
+                                                Alt + P
+                                            </kbd>
                                         </div>
-                                        <div className="sm:self-end shrink-0">
-                                            <button
-                                                type="button"
-                                                onClick={() => handleAddQuickProduct()}
-                                                disabled={!quickSelectedProductId}
-                                                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center justify-center transition-colors shadow-xs"
-                                            >
-                                                <FaPlus className="mr-1.5" size={11} /> Add to Cart
-                                            </button>
-                                        </div>
+                                        <SearchableSelect
+                                            ref={quickProductSelectRef}
+                                            options={products}
+                                            value={quickSelectedProductId}
+                                            onChange={(val) => {
+                                                if (val) {
+                                                    handleAddQuickProduct(val);
+                                                } else {
+                                                    setQuickSelectedProductId('');
+                                                }
+                                            }}
+                                            placeholder="Search product name, description... (Press Alt+P to focus, Enter to select)"
+                                        />
                                     </div>
                                 )}
 
@@ -467,6 +442,22 @@ export default function CreateSale({ products, customers }) {
                                     <div className="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-300">
                                         <p className="text-sm text-red-600 font-medium">No products available in your Dokan.</p>
                                         <p className="text-xs text-gray-500 mt-1">Please add products first under the Products page.</p>
+                                    </div>
+                                ) : data.items.length === 0 ? (
+                                    <div className="text-center py-10 bg-gray-50/70 rounded-xl border border-dashed border-gray-200">
+                                        <FaBoxes className="mx-auto text-gray-300 mb-2" size={32} />
+                                        <p className="text-sm font-semibold text-gray-700">No products added yet</p>
+                                        <p className="text-xs text-gray-400 mt-1 max-w-sm mx-auto">
+                                            Search above with <kbd className="px-1.5 py-0.5 bg-white border border-gray-200 rounded font-mono font-bold text-indigo-600 shadow-2xs">Alt+P</kbd> to add items, or add an item row manually.
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={addItemRow}
+                                            className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 rounded-lg text-xs font-semibold transition-colors shadow-2xs"
+                                        >
+                                            <FaPlus size={10} /> Add Product Row
+                                            <kbd className="ml-1 px-1 py-0.2 bg-white border border-indigo-200 rounded font-mono text-[10px] text-indigo-600">Alt+N</kbd>
+                                        </button>
                                     </div>
                                 ) : (
                                     <div className="space-y-3">
@@ -555,9 +546,8 @@ export default function CreateSale({ products, customers }) {
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => removeItemRow(idx)}
-                                                                        disabled={data.items.length <= 1 && !item.product_id}
-                                                                        className={`p-1.5 rounded-md transition-colors ${data.items.length <= 1 && !item.product_id ? 'text-gray-300 cursor-not-allowed' : 'text-red-500 hover:bg-red-50'}`}
-                                                                        title={data.items.length <= 1 ? (item.product_id ? 'Clear product selection' : 'Empty item') : 'Remove item'}
+                                                                        className="p-1.5 rounded-md text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors"
+                                                                        title="Remove item"
                                                                     >
                                                                         <FaTrash size={13} />
                                                                     </button>
