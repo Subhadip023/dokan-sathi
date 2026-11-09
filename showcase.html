@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dokan Sathi - Project Overview & Client Showcase</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #1e293b;
+            background-color: #f8fafc;
+            padding: 0;
+        }
+        header {
+            background-color: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .brand-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: #f1f5f9;
+            object-fit: contain;
+            padding: 4px;
+        }
+        .brand h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .brand p {
+            font-size: 13px;
+            color: #64748b;
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .nav-links a {
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            padding: 8px 14px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .nav-links a:hover {
+            color: #4338ca;
+            background-color: #f1f5f9;
+        }
+        .btn-download {
+            background-color: #4f46e5 !important;
+            color: #ffffff !important;
+        }
+        .btn-download:hover {
+            background-color: #4338ca !important;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        /* Overview Section */
+        .overview-box {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 35px 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .overview-box h2 {
+            font-size: 26px;
+            color: #0f172a;
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+        .overview-lead {
+            font-size: 16px;
+            color: #475569;
+            margin-bottom: 25px;
+            line-height: 1.7;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin: 25px 0 35px 0;
+        }
+        .stat-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px 20px;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: 800;
+            color: #4f46e5;
+        }
+        .stat-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 4px 0 2px 0;
+        }
+        .stat-desc {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        /* Pillars Grid */
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .pillars-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .pillar-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        }
+        .pillar-card h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .pillar-card p {
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        /* Tech Table */
+        .tech-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+        .tech-table th, .tech-table td {
+            text-align: left;
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
+        }
+        .tech-table th {
+            background-color: #f1f5f9;
+            color: #334155;
+            font-weight: 700;
+        }
+        .tech-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        /* Screenshots Gallery */
+        .category-heading {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 45px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #cbd5e1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 24px;
+            margin-bottom: 35px;
+        }
+        .screen-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-col: column;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .screen-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .screen-img-box {
+            background: #0f172a;
+            cursor: pointer;
+            width: 100%;
+            height: 220px;
+            overflow: hidden;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .screen-img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top;
+            display: block;
+        }
+        .screen-content {
+            padding: 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .screen-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+        .screen-desc {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+        .screen-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 10px;
+            border-top: 1px solid #f1f5f9;
+            font-size: 12px;
+        }
+        .screen-filename {
+            font-family: monospace;
+            color: #94a3b8;
+        }
+        .screen-meta a {
+            color: #4f46e5;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .screen-meta a:hover {
+            text-decoration: underline;
+        }
+
+        /* Simple Modal Lightbox */
+        #lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.85);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        #lightbox.active {
+            display: flex;
+        }
+        .lightbox-inner {
+            max-width: 90%;
+            max-height: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .lightbox-inner img {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 8px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            border: 1px solid #334155;
+            object-fit: contain;
+        }
+        .lightbox-inner h4 {
+            color: #ffffff;
+            margin-top: 12px;
+            font-size: 16px;
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        footer {
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            padding: 30px 20px;
+            text-align: center;
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sticky Header -->
+    <header>
+        <div class="header-container">
+            <div class="brand">
+                <img src="/logo.png" onerror="this.src='logo.png'" alt="Dokan Sathi Logo" class="brand-logo">
+                <div>
+                    <h1>Dokan Sathi (দোকান সাথী)</h1>
+                    <p>Retail & Wholesale Store Management Platform</p>
+                </div>
+            </div>
+            <nav class="nav-links">
+                <a href="#overview">Overview</a>
+                <a href="#features">Key Features</a>
+                <a href="#tech-stack">Tech Stack</a>
+                <a href="#screenshots">Screenshots (35)</a>
+                <a href="dokan_sathi_screenshots.zip" download class="btn-download">Download ZIP (5.4MB)</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- Project Overview Box -->
+        <section id="overview" class="overview-box">
+            <h2>Project Overview</h2>
+            <p class="overview-lead">
+                <strong>Dokan Sathi</strong> is a comprehensive, production-grade Shop Management and Point-of-Sale (POS) platform engineered for retail shops, grocery stores, pharmacies, wholesale distributors, and daily essentials merchants. It replaces error-prone paper ledgers with automated billing, inventory control, customer Khata recovery, and real-time net profit & loss calculations.
+            </p>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">&lt; 1 sec</div>
+                    <div class="stat-label">Rapid POS Checkout</div>
+                    <div class="stat-desc">Keyboard navigation & quick item lookup</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Khata Dues Recovery</div>
+                    <div class="stat-desc">Customer balances & partial payment settlements</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">Real-Time</div>
+                    <div class="stat-label">Net Profit & Loss</div>
+                    <div class="stat-desc">Revenue minus COGS & overhead expenses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">Multi-Staff</div>
+                    <div class="stat-label">Role Security</div>
+                    <div class="stat-desc">Cashier vs. Store Owner privacy controls</div>
+                </div>
+            </div>
+
+            <!-- 6 Key Features Pillars -->
+            <h3 class="section-title" id="features">Key Capabilities & Modules</h3>
+            <div class="pillars-grid">
+                <div class="pillar-card">
+                    <h3>🛒 High-Speed Point of Sale (POS)</h3>
+                    <p>Fast billing counter with keyboard shortcuts, packet and unit size calculations, discount handling, and walk-in or customer-linked receipts. Generates standard full-page A4, compact A5, and dual 2-in-1 (Customer + Merchant copy) printable PDF invoices.</p>
+                </div>
+                <div class="pillar-card">
+                    <h3>📒 Customer Khata & Credit Tracking</h3>
+                    <p>Eliminate lost revenue from uncollected customer debts. Every sale updates running credit balances with clear statuses (Full Paid, Partially Paid, Credit) and 1-click settlement recording.</p>
+                </div>
+                <div class="pillar-card">
+                    <h3>📦 Inventory & Low-Stock Alerts</h3>
+                    <p>Track stock by purchased packets and pieces per packet. Supports dual valuation (Cost Rate vs. Selling Rate). Visual warning badges alert the merchant before essential products run out.</p>
+                </div>
+                <div class="pillar-card">
+                    <h3>🚚 Wholesale Suppliers & Purchase Orders</h3>
+                    <p>Manage distributor contact details, phone numbers, and procurement histories. When incoming purchase orders arrive and are marked "Received", stock counts are auto-credited instantly.</p>
+                </div>
+                <div class="pillar-card">
+                    <h3>📊 Operational Overhead & Net Profit (P&L)</h3>
+                    <p>Comprehensive financial reporting calculating true bottom-line earnings: Gross Revenue minus Cost of Goods Sold (COGS) minus operating overheads (Rent, Electricity, Maintenance, Packaging, Salaries).</p>
+                </div>
+                <div class="pillar-card">
+                    <h3>🌐 Public Digital Storefront & Catalog</h3>
+                    <p>Each store receives a dedicated public online catalog URL (<code>/{dokan:slug}/price-list</code>) to share with buyers on WhatsApp or social media, featuring instant PDF price list downloads.</p>
+                </div>
+            </div>
+
+            <!-- Technology Stack -->
+            <h3 class="section-title" id="tech-stack">Technical Architecture</h3>
+            <table class="tech-table">
+                <thead>
+                    <tr>
+                        <th>Layer</th>
+                        <th>Technology</th>
+                        <th>Purpose & Functionality</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Backend Framework</strong></td>
+                        <td>Laravel 11.x (PHP 8.2+)</td>
+                        <td>Robust MVC backend, authentication, database migrations, Eloquent ORM.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Frontend Architecture</strong></td>
+                        <td>Inertia.js v2.0</td>
+                        <td>Single Page Application (SPA) speed without building a separate REST/GraphQL API.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>UI Framework</strong></td>
+                        <td>React 18 & Tailwind CSS 3</td>
+                        <td>Component-driven, responsive layout with mobile-first support.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Asset Bundler</strong></td>
+                        <td>Vite 6.x</td>
+                        <td>Sub-second Hot Module Replacement (HMR) and optimized production compilation.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>PDF Generation</strong></td>
+                        <td>barryvdh/laravel-dompdf</td>
+                        <td>Server-side PDF generation for A4/A5 invoices and product price catalogs.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Database</strong></td>
+                        <td>MySQL 8.0+</td>
+                        <td>Relational data modeling with foreign key constraints, indexes, and transactional consistency.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Screenshots Section Header -->
+        <div id="screenshots">
+            <h2 style="font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 5px;">Visual Walkthrough & Screenshots</h2>
+            <p style="color: #64748b; font-size: 14px;">All 35 application screens captured at high resolution.</p>
+        </div>
+
+        <!-- CATEGORY 1: Public & Guest Pages -->
+        <h3 class="category-heading">1. Public & Guest Screens <span>(5 Screens)</span></h3>
+        <div class="gallery-grid">
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/01_landing_welcome.png', '01. Landing & Welcome Page')">
+                    <img src="images/demo-image/01_landing_welcome.png" alt="01. Landing Welcome Page" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">01. Landing & Welcome Page</div>
+                        <div class="screen-desc">Modern marketing hero page showcasing key store features.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">01_landing_welcome.png</span>
+                        <a href="images/demo-image/01_landing_welcome.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/02_login_page.png', '02. Merchant Sign In')">
+                    <img src="images/demo-image/02_login_page.png" alt="02. Login Page" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">02. Merchant Sign In</div>
+                        <div class="screen-desc">Secure merchant sign-in with remember-me and CSRF protection.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">02_login_page.png</span>
+                        <a href="images/demo-image/02_login_page.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/03_register_page.png', '03. Store Registration')">
+                    <img src="images/demo-image/03_register_page.png" alt="03. Register Page" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">03. Store Registration</div>
+                        <div class="screen-desc">Instant onboarding flow for new shop and store owners.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">03_register_page.png</span>
+                        <a href="images/demo-image/03_register_page.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/04_forgot_password.png', '04. Password Recovery')">
+                    <img src="images/demo-image/04_forgot_password.png" alt="04. Forgot Password" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">04. Password Recovery</div>
+                        <div class="screen-desc">Automated password reset link dispatch and recovery screen.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">04_forgot_password.png</span>
+                        <a href="images/demo-image/04_forgot_password.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/05_public_store_catalog.png', '05. Public Store Price Catalog')">
+                    <img src="images/demo-image/05_public_store_catalog.png" alt="05. Public Store Catalog" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">05. Public Store Price Catalog</div>
+                        <div class="screen-desc">Customer-facing online price catalog with instant PDF download.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">05_public_store_catalog.png</span>
+                        <a href="images/demo-image/05_public_store_catalog.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CATEGORY 2: Dashboard & Inventory -->
+        <h3 class="category-heading">2. Store Dashboard & Inventory Management <span>(4 Screens)</span></h3>
+        <div class="gallery-grid">
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/06_dashboard_overview.png', '06. Analytics Dashboard')">
+                    <img src="images/demo-image/06_dashboard_overview.png" alt="06. Dashboard Overview" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">06. Analytics Dashboard</div>
+                        <div class="screen-desc">Store analytics, 30-day sales trend chart, low-stock warnings, & metrics.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">06_dashboard_overview.png</span>
+                        <a href="images/demo-image/06_dashboard_overview.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/07_products_catalog.png', '07. Product Inventory List')">
+                    <img src="images/demo-image/07_products_catalog.png" alt="07. Products Catalog" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">07. Product Inventory List</div>
+                        <div class="screen-desc">Full stock table with cost rates, selling prices, packet sizes, and stock alerts.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">07_products_catalog.png</span>
+                        <a href="images/demo-image/07_products_catalog.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/08_product_add_modal.png', '08. Add Product Modal')">
+                    <img src="images/demo-image/08_product_add_modal.png" alt="08. Add Product Modal" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">08. Add Product Modal</div>
+                        <div class="screen-desc">Fast inline dialog to record inventory with cost/selling rates and reorder levels.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">08_product_add_modal.png</span>
+                        <a href="images/demo-image/08_product_add_modal.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/09_store_price_list.png', '09. Internal Price List')">
+                    <img src="images/demo-image/09_store_price_list.png" alt="09. Store Price List" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">09. Internal Price List</div>
+                        <div class="screen-desc">Searchable price catalog with wholesale/retail margins and PDF generation.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">09_store_price_list.png</span>
+                        <a href="images/demo-image/09_store_price_list.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CATEGORY 3: POS Billing & Sales -->
+        <h3 class="category-heading">3. POS Billing & Khata Credit Tracking <span>(4 Screens)</span></h3>
+        <div class="gallery-grid">
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/10_sales_history.png', '10. Sales Transaction Ledger')">
+                    <img src="images/demo-image/10_sales_history.png" alt="10. Sales History" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">10. Sales Transaction Ledger</div>
+                        <div class="screen-desc">Historical sales ledger with payment status tags (Paid, Credit, Partial).</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">10_sales_history.png</span>
+                        <a href="images/demo-image/10_sales_history.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/11_sales_due_khata.png', '11. Due Invoices & Khata Book')">
+                    <img src="images/demo-image/11_sales_due_khata.png" alt="11. Sales Due Khata" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">11. Due Invoices & Khata Book</div>
+                        <div class="screen-desc">Customer credit and dues ledger with quick payment collection actions.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">11_sales_due_khata.png</span>
+                        <a href="images/demo-image/11_sales_due_khata.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/12_pos_billing_counter.png', '12. POS Billing Terminal')">
+                    <img src="images/demo-image/12_pos_billing_counter.png" alt="12. POS Billing Counter" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">12. POS Billing Terminal</div>
+                        <div class="screen-desc">Fast point-of-sale checkout counter with multi-item keyboard shortcuts.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">12_pos_billing_counter.png</span>
+                        <a href="images/demo-image/12_pos_billing_counter.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/13_pos_billing_active.png', '13. POS Checkout Calculation')">
+                    <img src="images/demo-image/13_pos_billing_active.png" alt="13. POS Active Calculation" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">13. POS Checkout Calculation</div>
+                        <div class="screen-desc">Active checkout calculation with discounts, paid amounts, and due balancing.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">13_pos_billing_active.png</span>
+                        <a href="images/demo-image/13_pos_billing_active.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CATEGORY 4: Customers & Suppliers -->
+        <h3 class="category-heading">4. Customers & Wholesale Vendors <span>(4 Screens)</span></h3>
+        <div class="gallery-grid">
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/14_customers_directory.png', '14. Customer Ledger Directory')">
+                    <img src="images/demo-image/14_customers_directory.png" alt="14. Customers Directory" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">14. Customer Ledger Directory</div>
+                        <div class="screen-desc">Customer list with shops, phone numbers, total purchases, and outstanding dues.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">14_customers_directory.png</span>
+                        <a href="images/demo-image/14_customers_directory.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/15_customer_add_modal.png', '15. Add Customer Modal')">
+                    <img src="images/demo-image/15_customer_add_modal.png" alt="15. Customer Add Modal" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">15. Add Customer Modal</div>
+                        <div class="screen-desc">Direct customer onboarding dialog with shop name and contact details.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">15_customer_add_modal.png</span>
+                        <a href="images/demo-image/15_customer_add_modal.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/16_suppliers_directory.png', '16. Wholesale Suppliers')">
+                    <img src="images/demo-image/16_suppliers_directory.png" alt="16. Suppliers Directory" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">16. Wholesale Suppliers</div>
+                        <div class="screen-desc">Vendor registry for FMCG, medical, and grocery wholesale distributors.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">16_suppliers_directory.png</span>
+                        <a href="images/demo-image/16_suppliers_directory.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/17_supplier_add_modal.png', '17. Add Supplier Modal')">
+                    <img src="images/demo-image/17_supplier_add_modal.png" alt="17. Supplier Add Modal" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">17. Add Supplier Modal</div>
+                        <div class="screen-desc">Onboarding dialog for new distributor or vendor partners.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">17_supplier_add_modal.png</span>
+                        <a href="images/demo-image/17_supplier_add_modal.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CATEGORY 5: Orders, Expenses, Staff & Licenses -->
+        <h3 class="category-heading">5. Orders, Overhead Expenses & Staff <span>(6 Screens)</span></h3>
+        <div class="gallery-grid">
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/18_purchase_orders_list.png', '18. Purchase Orders List')">
+                    <img src="images/demo-image/18_purchase_orders_list.png" alt="18. Orders List" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">18. Purchase Orders List</div>
+                        <div class="screen-desc">Purchase orders tracking with status tags (Received, Ordered, Pending).</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">18_purchase_orders_list.png</span>
+                        <a href="images/demo-image/18_purchase_orders_list.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/19_purchase_order_create.png', '19. Create Purchase Order')">
+                    <img src="images/demo-image/19_purchase_order_create.png" alt="19. Order Create Form" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">19. Create Purchase Order</div>
+                        <div class="screen-desc">Multi-item supplier requisition with real-time total order calculations.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">19_purchase_order_create.png</span>
+                        <a href="images/demo-image/19_purchase_order_create.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/20_overhead_expenses.png', '20. Overhead Expenses')">
+                    <img src="images/demo-image/20_overhead_expenses.png" alt="20. Overhead Costs" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">20. Overhead Expenses</div>
+                        <div class="screen-desc">Monthly shop rent, electricity, packaging, and maintenance expense records.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">20_overhead_expenses.png</span>
+                        <a href="images/demo-image/20_overhead_expenses.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/21_overhead_expense_add_modal.png', '21. Record Expense Modal')">
+                    <img src="images/demo-image/21_overhead_expense_add_modal.png" alt="21. Overhead Cost Modal" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">21. Record Expense Modal</div>
+                        <div class="screen-desc">Quick expense logger for daily operational cash outlays.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">21_overhead_expense_add_modal.png</span>
+                        <a href="images/demo-image/21_overhead_expense_add_modal.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/22_staff_management.png', '22. Staff Management')">
+                    <img src="images/demo-image/22_staff_management.png" alt="22. Staff Management" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">22. Staff Management</div>
+                        <div class="screen-desc">Staff permission management (Store Owner vs. Cashier/Employee roles).</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">22_staff_management.png</span>
+                        <a href="images/demo-image/22_staff_management.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/23_staff_add_modal.png', '23. Add Staff Modal')">
+                    <img src="images/demo-image/23_staff_add_modal.png" alt="23. Staff Add Modal" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">23. Add Staff Modal</div>
+                        <div class="screen-desc">Create dedicated cashier and store assistant login credentials.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">23_staff_add_modal.png</span>
+                        <a href="images/demo-image/23_staff_add_modal.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CATEGORY 6: Legal, Capital, Reports & Settings -->
+        <h3 class="category-heading">6. Financial Intelligence & Settings <span>(7 Screens)</span></h3>
+        <div class="gallery-grid">
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/24_compliance_licenses.png', '24. Compliance & Licenses')">
+                    <img src="images/demo-image/24_compliance_licenses.png" alt="24. Licenses" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">24. Compliance & Licenses</div>
+                        <div class="screen-desc">FSSAI, Trade License, GSTIN, and Drug license expiry tracking.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">24_compliance_licenses.png</span>
+                        <a href="images/demo-image/24_compliance_licenses.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/25_license_add_modal.png', '25. Add License Modal')">
+                    <img src="images/demo-image/25_license_add_modal.png" alt="25. License Add Modal" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">25. Add License Modal</div>
+                        <div class="screen-desc">Register official business certifications and permits.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">25_license_add_modal.png</span>
+                        <a href="images/demo-image/25_license_add_modal.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/26_store_investments.png', '26. Store Capital Investments')">
+                    <img src="images/demo-image/26_store_investments.png" alt="26. Investments" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">26. Store Capital Investments</div>
+                        <div class="screen-desc">Capital contributions, machinery, partner investments, and payment methods.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">26_store_investments.png</span>
+                        <a href="images/demo-image/26_store_investments.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/27_investment_add_modal.png', '27. Record Investment Modal')">
+                    <img src="images/demo-image/27_investment_add_modal.png" alt="27. Investment Modal" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">27. Record Investment Modal</div>
+                        <div class="screen-desc">Log partner equity, store improvements, and capital additions.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">27_investment_add_modal.png</span>
+                        <a href="images/demo-image/27_investment_add_modal.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/28_reports_profit_and_loss.png', '28. Profit & Loss Report')">
+                    <img src="images/demo-image/28_reports_profit_and_loss.png" alt="28. Reports PnL" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">28. Profit & Loss Report</div>
+                        <div class="screen-desc">Profit & Loss accounting with Gross Margin, Net Profit, and item performance.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">28_reports_profit_and_loss.png</span>
+                        <a href="images/demo-image/28_reports_profit_and_loss.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/29_dokan_store_settings.png', '29. Store Branding & Slug')">
+                    <img src="images/demo-image/29_dokan_store_settings.png" alt="29. Dokan Settings" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">29. Store Branding & Slug</div>
+                        <div class="screen-desc">Custom store URL, logo upload, address, and digital store settings.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">29_dokan_store_settings.png</span>
+                        <a href="images/demo-image/29_dokan_store_settings.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/30_user_account_profile.png', '30. Account Profile & Security')">
+                    <img src="images/demo-image/30_user_account_profile.png" alt="30. User Profile" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">30. Account Profile & Security</div>
+                        <div class="screen-desc">User credentials, contact details, and password updating.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">30_user_account_profile.png</span>
+                        <a href="images/demo-image/30_user_account_profile.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CATEGORY 7: Mobile Responsive Views -->
+        <h3 class="category-heading">7. Mobile Responsive Viewports <span>(5 Screens)</span></h3>
+        <div class="gallery-grid">
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/31_mobile_dashboard.png', '31. Mobile Dashboard')">
+                    <img src="images/demo-image/31_mobile_dashboard.png" alt="31. Mobile Dashboard" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">31. Mobile Dashboard</div>
+                        <div class="screen-desc">Responsive smartphone overview of key store indicators.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">31_mobile_dashboard.png</span>
+                        <a href="images/demo-image/31_mobile_dashboard.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/32_mobile_pos_billing.png', '32. Mobile POS Billing')">
+                    <img src="images/demo-image/32_mobile_pos_billing.png" alt="32. Mobile POS" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">32. Mobile POS Billing</div>
+                        <div class="screen-desc">Touch-optimized POS terminal for tablet and smartphone checkout.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">32_mobile_pos_billing.png</span>
+                        <a href="images/demo-image/32_mobile_pos_billing.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/33_mobile_products_list.png', '33. Mobile Products List')">
+                    <img src="images/demo-image/33_mobile_products_list.png" alt="33. Mobile Products" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">33. Mobile Products List</div>
+                        <div class="screen-desc">Mobile-optimized inventory management and stock cards.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">33_mobile_products_list.png</span>
+                        <a href="images/demo-image/33_mobile_products_list.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/34_mobile_sales_list.png', '34. Mobile Sales Transactions')">
+                    <img src="images/demo-image/34_mobile_sales_list.png" alt="34. Mobile Sales" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">34. Mobile Sales Transactions</div>
+                        <div class="screen-desc">On-the-go transaction ledger review on mobile devices.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">34_mobile_sales_list.png</span>
+                        <a href="images/demo-image/34_mobile_sales_list.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="screen-card">
+                <div class="screen-img-box" onclick="openLightbox('images/demo-image/35_mobile_public_catalog.png', '35. Mobile Public Catalog')">
+                    <img src="images/demo-image/35_mobile_public_catalog.png" alt="35. Mobile Public Catalog" loading="lazy">
+                </div>
+                <div class="screen-content">
+                    <div>
+                        <div class="screen-title">35. Mobile Public Catalog</div>
+                        <div class="screen-desc">Customer mobile digital price list with one-tap download.</div>
+                    </div>
+                    <div class="screen-meta">
+                        <span class="screen-filename">35_mobile_public_catalog.png</span>
+                        <a href="images/demo-image/35_mobile_public_catalog.png" target="_blank">View Full</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Lightbox Zoom -->
+    <div id="lightbox" onclick="closeLightbox()">
+        <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+        <div class="lightbox-inner" onclick="event.stopPropagation()">
+            <img id="lightbox-img" src="" alt="Zoomed view">
+            <h4 id="lightbox-title"></h4>
+        </div>
+    </div>
+
+    <footer>
+        <p><strong>Dokan Sathi (দোকান সাথী)</strong> &copy; 2026. All rights reserved.</p>
+        <p style="margin-top: 5px; color: #94a3b8;">Created for client presentation and demonstration.</p>
+    </footer>
+
+    <script>
+        function openLightbox(src, title) {
+            document.getElementById('lightbox-img').src = src;
+            document.getElementById('lightbox-title').innerText = title;
+            document.getElementById('lightbox').classList.add('active');
+        }
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeLightbox();
+        });
+    </script>
+</body>
+</html>
