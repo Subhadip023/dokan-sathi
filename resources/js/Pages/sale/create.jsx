@@ -12,11 +12,19 @@ export default function CreateSale({ products, customers }) {
 
     const getTodayDate = () => new Date().toISOString().split('T')[0];
 
-    const createInitialItem = (productId = '') => ({
-        product_id: productId || '',
-        qty: 1,
-        discount: 0,
-    });
+    const createInitialItem = (productId = '', rate = '') => {
+        let initialRate = rate;
+        if (productId && (initialRate === '' || initialRate === null || initialRate === undefined)) {
+            const prod = products.find(p => String(p.id) === String(productId));
+            if (prod) initialRate = prod.selling_rate;
+        }
+        return {
+            product_id: productId || '',
+            qty: 1,
+            rate: initialRate !== '' && initialRate !== null && initialRate !== undefined ? initialRate : '',
+            discount: 0,
+        };
+    };
 
     const { data, setData, post, errors, processing } = useForm({
         dokan_id: current_dokan?.id,
@@ -74,6 +82,12 @@ export default function CreateSale({ products, customers }) {
     const updateItemRow = (index, field, value) => {
         const newItems = [...data.items];
         newItems[index][field] = value;
+        if (field === 'product_id') {
+            const prod = products.find(p => String(p.id) === String(value));
+            if (prod) {
+                newItems[index]['rate'] = prod.selling_rate;
+            }
+        }
         setData('items', newItems);
     };
 
@@ -92,9 +106,12 @@ export default function CreateSale({ products, customers }) {
             const product = products.find(p => String(p.id) === String(item.product_id));
             const qty = parseInt(item.qty) || 0;
             const discount = parseFloat(item.discount) || 0;
+            const rate = (item.rate !== undefined && item.rate !== '' && !isNaN(parseFloat(item.rate)))
+                ? parseFloat(item.rate)
+                : (product ? product.selling_rate : 0);
 
             if (product) {
-                const lineTotal = qty * product.selling_rate;
+                const lineTotal = qty * rate;
                 subtotal += lineTotal;
                 itemDiscountsSum += discount;
                 totalPackets += qty;
@@ -478,7 +495,10 @@ export default function CreateSale({ products, customers }) {
                                                 <tbody className="divide-y divide-gray-100">
                                                     {data.items.map((item, idx) => {
                                                         const itemProduct = products.find(p => String(p.id) === String(item.product_id));
-                                                        const rate = itemProduct ? itemProduct.selling_rate : 0;
+                                                        const defaultRate = itemProduct ? itemProduct.selling_rate : 0;
+                                                        const rate = (item.rate !== undefined && item.rate !== '' && !isNaN(parseFloat(item.rate)))
+                                                            ? parseFloat(item.rate)
+                                                            : defaultRate;
                                                         const qty = parseInt(item.qty) || 0;
                                                         const itemDisc = parseFloat(item.discount) || 0;
                                                         const totalItemDisc = itemDisc + grandTotals.splitDiscountPerItem;
@@ -511,8 +531,30 @@ export default function CreateSale({ products, customers }) {
                                                                         </div>
                                                                     )}
                                                                 </td>
-                                                                <td className="py-3 px-3 font-mono text-gray-700">
-                                                                    ₹{rate}
+                                                                <td className="py-3 px-3">
+                                                                    <div className="relative">
+                                                                        <span className="absolute inset-y-0 left-0 pl-2 flex items-center text-gray-400 text-xs">₹</span>
+                                                                        <input
+                                                                            type="number"
+                                                                            step="0.01"
+                                                                            min="0"
+                                                                            className="w-full pl-5 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-xs font-mono font-semibold text-gray-800"
+                                                                            value={item.rate !== undefined && item.rate !== null ? item.rate : (itemProduct?.selling_rate || '')}
+                                                                            onChange={(e) => updateItemRow(idx, 'rate', e.target.value)}
+                                                                            placeholder={itemProduct ? String(itemProduct.selling_rate) : '0.00'}
+                                                                            title="Price list rate is default. You can edit this rate to sell at a custom or higher price."
+                                                                        />
+                                                                    </div>
+                                                                    {itemProduct && item.rate !== '' && (parseFloat(item.rate) > parseFloat(itemProduct.selling_rate)) && (
+                                                                        <span className="text-[10px] text-emerald-600 block mt-0.5 font-sans font-medium whitespace-nowrap">
+                                                                            +₹{(parseFloat(item.rate) - parseFloat(itemProduct.selling_rate)).toFixed(2)} above list
+                                                                        </span>
+                                                                    )}
+                                                                    {itemProduct && item.rate !== '' && (parseFloat(item.rate) < parseFloat(itemProduct.selling_rate)) && (
+                                                                        <span className="text-[10px] text-amber-600 block mt-0.5 font-sans whitespace-nowrap">
+                                                                            -₹{(parseFloat(itemProduct.selling_rate) - parseFloat(item.rate)).toFixed(2)} below list
+                                                                        </span>
+                                                                    )}
                                                                 </td>
                                                                 <td className="py-3 px-3">
                                                                     <input

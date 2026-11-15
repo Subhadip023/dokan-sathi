@@ -279,12 +279,19 @@ class SaleController extends Controller
             $preparedItems = [];
             foreach ($request->items as $item) {
                 $product = Product::where('dokan_id', $dokan->id)->lockForUpdate()->findOrFail($item['product_id']);
+                
+                // Allow custom selling rate per sale (defaults to product selling_rate if not specified)
+                $rate = (isset($item['rate']) && is_numeric($item['rate']) && floatval($item['rate']) > 0)
+                    ? floatval($item['rate'])
+                    : $product->selling_rate;
+
                 $totalItemDiscount = (floatval($item['discount'] ?? 0)) + $extraDiscountPerItem;
-                $itemTotalAmount = max(0, ($item['qty'] * $product->selling_rate) - $totalItemDiscount);
+                $itemTotalAmount = max(0, ($item['qty'] * $rate) - $totalItemDiscount);
                 $totalOrderAmount += $itemTotalAmount;
                 $preparedItems[] = [
                     'product' => $product,
                     'qty' => $item['qty'],
+                    'rate' => $rate,
                     'discount' => round($totalItemDiscount, 2),
                     'item_total_amount' => $itemTotalAmount,
                 ];
@@ -322,7 +329,7 @@ class SaleController extends Controller
                     'product_id'     => $product->id,
                     'qty'            => $prep['qty'],
                     'packet_size'    => $product->packet_size,
-                    'rate'           => $product->selling_rate,
+                    'rate'           => $prep['rate'],
                     'cost_rate'      => $product->cost_rate,
                     'discount'       => $prep['discount'],
                     'payment_status' => $paymentStatus,
