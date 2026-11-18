@@ -68,4 +68,8 @@ class Dokan extends Model
     public function licenses(){
         return $this->hasMany(License::class, 'dokan_id');
     }
+
+    public function coustomerGroups(){
+        return $this->hasMany(CoustomerGroup::class, 'dokan_id');
+    }
 }

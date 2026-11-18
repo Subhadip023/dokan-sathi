@@ -12,6 +12,7 @@ class Coustomer extends Model
 
     protected $fillable = [
         'dokan_id',
+        'coustomer_group_id',
         'name',
         'phone',
         'email',
@@ -23,6 +24,11 @@ class Coustomer extends Model
     public function dokan()
     {
         return $this->belongsTo(Dokan::class, 'dokan_id');
+    }
+
+    public function group()
+    {
+        return $this->belongsTo(CoustomerGroup::class, 'coustomer_group_id');
     }
 
     public function addedBy()
