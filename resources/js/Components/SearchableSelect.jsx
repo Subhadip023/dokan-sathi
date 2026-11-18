@@ -228,6 +228,11 @@ const SearchableSelect = forwardRef(function SearchableSelect({
                                     {opt.shop_name}
                                 </span>
                             )}
+                            {opt.group && (
+                                <span className="inline-flex items-center text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded font-medium border border-purple-200">
+                                    🏷️ {opt.group.name}
+                                </span>
+                            )}
                             {opt.email && (
                                 <span className="text-[10px] text-gray-400 truncate max-w-[150px]">
                                     {opt.email}

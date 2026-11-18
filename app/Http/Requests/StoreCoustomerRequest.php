@@ -26,6 +26,7 @@ class StoreCoustomerRequest extends FormRequest
 
         return [
             'name' => 'required|string|max:255',
+            'coustomer_group_id' => 'nullable|exists:coustomer_groups,id',
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'shop_name' => 'nullable|string|max:255',

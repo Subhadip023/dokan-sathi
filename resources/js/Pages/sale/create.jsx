@@ -7,16 +7,48 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import SearchableSelect from '@/Components/SearchableSelect';
 import { FaShoppingCart, FaArrowLeft, FaPlus, FaTrash, FaUser, FaCalendarAlt, FaRupeeSign, FaBoxes, FaReceipt, FaTag, FaKeyboard, FaTimes } from 'react-icons/fa';
 
+const DISCOUNT_TYPE_PERCENTAGE = 1;
+const DISCOUNT_TYPE_FIXED = 2;
+const DISCOUNT_TYPE_COST_PLUS = 3;
+
+const calculateGroupRate = (product, group) => {
+    if (!product) return 0;
+    const sellingRate = parseFloat(product.selling_rate) || 0;
+    if (!group || !group.is_active) {
+        return sellingRate;
+    }
+    const costRate = parseFloat(product.cost_rate) || 0;
+    const discountVal = parseFloat(group.discount_value) || 0;
+    const type = parseInt(group.discount_type);
+
+    if (type === DISCOUNT_TYPE_PERCENTAGE) {
+        return Math.max(0, Math.round((sellingRate - (sellingRate * (discountVal / 100))) * 100) / 100);
+    } else if (type === DISCOUNT_TYPE_FIXED) {
+        return Math.max(0, Math.round((sellingRate - discountVal) * 100) / 100);
+    } else if (type === DISCOUNT_TYPE_COST_PLUS) {
+        return Math.max(0, Math.round((costRate + discountVal) * 100) / 100);
+    }
+    return sellingRate;
+};
+
+const getEffectiveRate = (product, customer) => {
+    if (!product) return 0;
+    if (customer && customer.group && customer.group.is_active) {
+        return calculateGroupRate(product, customer.group);
+    }
+    return parseFloat(product.selling_rate) || 0;
+};
+
 export default function CreateSale({ products, customers }) {
     const current_dokan = usePage().props.auth.current_dokan;
 
     const getTodayDate = () => new Date().toISOString().split('T')[0];
 
-    const createInitialItem = (productId = '', rate = '') => {
+    const createInitialItem = (productId = '', rate = '', targetCustomer = null) => {
         let initialRate = rate;
         if (productId && (initialRate === '' || initialRate === null || initialRate === undefined)) {
             const prod = products.find(p => String(p.id) === String(productId));
-            if (prod) initialRate = prod.selling_rate;
+            if (prod) initialRate = getEffectiveRate(prod, targetCustomer || selectedCustomer);
         }
         return {
             product_id: productId || '',
@@ -51,6 +83,42 @@ export default function CreateSale({ products, customers }) {
         return customers.find(c => String(c.id) === String(data.customer_id)) || null;
     }, [customers, data.customer_id]);
 
+    const handleCustomerChange = (customerId) => {
+        const newCust = customers.find(c => String(c.id) === String(customerId)) || null;
+        if (data.items.length > 0) {
+            const updatedItems = data.items.map(item => {
+                if (!item.product_id) return item;
+                const prod = products.find(p => String(p.id) === String(item.product_id));
+                if (!prod) return item;
+                return {
+                    ...item,
+                    rate: getEffectiveRate(prod, newCust)
+                };
+            });
+            setData(prev => ({
+                ...prev,
+                customer_id: customerId,
+                items: updatedItems,
+            }));
+            if (newCust?.group) {
+                const group = newCust.group;
+                const ruleDesc = parseInt(group.discount_type) === DISCOUNT_TYPE_COST_PLUS
+                    ? `Cost + ₹${parseFloat(group.discount_value).toFixed(2)} transport`
+                    : (parseInt(group.discount_type) === DISCOUNT_TYPE_PERCENTAGE
+                        ? `${parseFloat(group.discount_value)}% discount`
+                        : `₹${parseFloat(group.discount_value).toFixed(2)} discount`);
+                toast.success(`Applied "${group.name}" pricing (${ruleDesc})`, { icon: '🏷️' });
+            } else if (selectedCustomer?.group) {
+                toast('Reset to standard price list rates');
+            }
+        } else {
+            setData('customer_id', customerId);
+            if (newCust?.group) {
+                toast(`Customer tier: ${newCust.group.name}`, { icon: '🏷️' });
+            }
+        }
+    };
+
     const handleAddQuickProduct = (productIdOverride = null) => {
         const prodId = productIdOverride || quickSelectedProductId;
         if (!prodId) return;
@@ -63,14 +131,14 @@ export default function CreateSale({ products, customers }) {
             setData('items', newItems);
             toast.success('Product quantity increased');
         } else {
-            setData('items', [...data.items, createInitialItem(prodId)]);
+            setData('items', [...data.items, createInitialItem(prodId, '', selectedCustomer)]);
             toast.success('Product added to invoice');
         }
         setQuickSelectedProductId('');
     };
 
     const addItemRow = () => {
-        setData('items', [...data.items, createInitialItem()]);
+        setData('items', [...data.items, createInitialItem('', '', selectedCustomer)]);
     };
 
     const removeItemRow = (index) => {
@@ -85,7 +153,7 @@ export default function CreateSale({ products, customers }) {
         if (field === 'product_id') {
             const prod = products.find(p => String(p.id) === String(value));
             if (prod) {
-                newItems[index]['rate'] = prod.selling_rate;
+                newItems[index]['rate'] = getEffectiveRate(prod, selectedCustomer);
             }
         }
         setData('items', newItems);
@@ -377,7 +445,7 @@ export default function CreateSale({ products, customers }) {
                                             id="customer_id"
                                             options={customers}
                                             value={data.customer_id}
-                                            onChange={(val) => setData('customer_id', val)}
+                                            onChange={handleCustomerChange}
                                             placeholder="Walk-in / Cash Customer"
                                             searchPlaceholder="Search customer by name, phone, shop... (Alt+C)"
                                             emptyOption={{ id: '', name: 'Walk-in / Cash Customer', subtitle: 'Standard counter sale (no customer account)' }}
@@ -390,22 +458,34 @@ export default function CreateSale({ products, customers }) {
 
                                         {/* Selected Customer Quick Info Card */}
                                         {selectedCustomer && (
-                                            <div className="mt-2.5 p-2.5 bg-indigo-50/60 rounded-lg border border-indigo-100 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-in fade-in duration-150">
+                                            <div className="mt-2.5 p-3 bg-indigo-50/70 rounded-lg border border-indigo-100 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-in fade-in duration-150">
                                                 <div className="min-w-0">
-                                                    <div className="font-bold text-gray-900 flex items-center gap-1.5 truncate">
+                                                    <div className="font-bold text-gray-900 flex items-center gap-1.5 flex-wrap">
                                                         <span>{selectedCustomer.name}</span>
                                                         {selectedCustomer.shop_name && (
                                                             <span className="text-[10px] bg-indigo-100 text-indigo-800 font-medium px-1.5 py-0.5 rounded">
                                                                 {selectedCustomer.shop_name}
                                                             </span>
                                                         )}
+                                                        {selectedCustomer.group && (
+                                                            <span className="text-[10px] bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded border border-purple-200 flex items-center gap-1">
+                                                                🏷️ {selectedCustomer.group.name}
+                                                            </span>
+                                                        )}
                                                     </div>
-                                                    <div className="text-[11px] text-gray-600 mt-0.5 flex flex-wrap items-center gap-3">
+                                                    <div className="text-[11px] text-gray-600 mt-1 flex flex-wrap items-center gap-3">
                                                         {selectedCustomer.phone && (
                                                             <span className="font-mono text-gray-700 font-medium">📞 {selectedCustomer.phone}</span>
                                                         )}
                                                         {selectedCustomer.email && (
                                                             <span className="text-gray-500">✉️ {selectedCustomer.email}</span>
+                                                        )}
+                                                        {selectedCustomer.group && (
+                                                            <span className="text-[11px] font-semibold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-100">
+                                                                {parseInt(selectedCustomer.group.discount_type) === 3 && `Rule: Cost Price + ₹${parseFloat(selectedCustomer.group.discount_value).toFixed(2)} Transport Fee`}
+                                                                {parseInt(selectedCustomer.group.discount_type) === 1 && `Rule: ${parseFloat(selectedCustomer.group.discount_value)}% Discount off Retail`}
+                                                                {parseInt(selectedCustomer.group.discount_type) === 2 && `Rule: Flat ₹${parseFloat(selectedCustomer.group.discount_value).toFixed(2)} Discount off Retail`}
+                                                            </span>
                                                         )}
                                                     </div>
                                                 </div>
@@ -545,12 +625,31 @@ export default function CreateSale({ products, customers }) {
                                                                             title="Price list rate is default. You can edit this rate to sell at a custom or higher price."
                                                                         />
                                                                     </div>
+                                                                    {itemProduct && selectedCustomer?.group && selectedCustomer.group.is_active && (
+                                                                        <div className="mt-1">
+                                                                            {parseInt(selectedCustomer.group.discount_type) === 3 && (
+                                                                                <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200 block truncate" title={`Cost ₹${itemProduct.cost_rate} + ₹${selectedCustomer.group.discount_value} Transport`}>
+                                                                                    🏷️ Cost ₹{parseFloat(itemProduct.cost_rate || 0).toFixed(2)} + ₹{parseFloat(selectedCustomer.group.discount_value).toFixed(2)}
+                                                                                </span>
+                                                                            )}
+                                                                            {parseInt(selectedCustomer.group.discount_type) === 1 && (
+                                                                                <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200 block truncate">
+                                                                                    🏷️ {selectedCustomer.group.name} ({parseFloat(selectedCustomer.group.discount_value)}% off)
+                                                                                </span>
+                                                                            )}
+                                                                            {parseInt(selectedCustomer.group.discount_type) === 2 && (
+                                                                                <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200 block truncate">
+                                                                                    🏷️ {selectedCustomer.group.name} (-₹{parseFloat(selectedCustomer.group.discount_value).toFixed(2)})
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
                                                                     {itemProduct && item.rate !== '' && (parseFloat(item.rate) > parseFloat(itemProduct.selling_rate)) && (
                                                                         <span className="text-[10px] text-emerald-600 block mt-0.5 font-sans font-medium whitespace-nowrap">
                                                                             +₹{(parseFloat(item.rate) - parseFloat(itemProduct.selling_rate)).toFixed(2)} above list
                                                                         </span>
                                                                     )}
-                                                                    {itemProduct && item.rate !== '' && (parseFloat(item.rate) < parseFloat(itemProduct.selling_rate)) && (
+                                                                    {itemProduct && item.rate !== '' && (parseFloat(item.rate) < parseFloat(itemProduct.selling_rate)) && (!selectedCustomer?.group || !selectedCustomer.group.is_active) && (
                                                                         <span className="text-[10px] text-amber-600 block mt-0.5 font-sans whitespace-nowrap">
                                                                             -₹{(parseFloat(itemProduct.selling_rate) - parseFloat(item.rate)).toFixed(2)} below list
                                                                         </span>

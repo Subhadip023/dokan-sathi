@@ -17,6 +17,7 @@ use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\CoustomerGroupController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -41,6 +42,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/price-list', [ProductController::class, 'priceList'])->name('products.price-list');
     Route::resource('products', ProductController::class);
     Route::resource('coustomers', CoustomerController::class);
+    Route::resource('coustomer-groups', CoustomerGroupController::class)->only(['store', 'update', 'destroy']);
     Route::resource('suppliers', SupplierController::class);
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status-update');
     Route::resource('orders', OrderController::class);

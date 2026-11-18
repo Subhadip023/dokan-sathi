@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Coustomer;
+use App\Models\CoustomerGroup;
 use App\Models\Dokan;
 use App\Models\Investment;
 use App\Models\License;
@@ -155,37 +156,70 @@ class DemoDokanSeeder extends Seeder
             );
         }
 
-        // 4. Create Sample Customers for Demo Dokan
+        // 4. Create Sample Customer Groups for Demo Dokan
+        $familyGroup = CoustomerGroup::updateOrCreate(
+            ['dokan_id' => $dokan->id, 'name' => 'Family & Relatives'],
+            [
+                'discount_type'  => CoustomerGroup::TYPE_COST_PLUS, // Cost Price + Transport Fee
+                'discount_value' => 5.00,                           // ₹5 transport markup
+                'is_active'      => true,
+            ]
+        );
+
+        $wholesaleGroup = CoustomerGroup::updateOrCreate(
+            ['dokan_id' => $dokan->id, 'name' => 'Wholesale Buyers'],
+            [
+                'discount_type'  => CoustomerGroup::TYPE_PERCENTAGE, // 10% Discount off Retail
+                'discount_value' => 10.00,
+                'is_active'      => true,
+            ]
+        );
+
+        $vipGroup = CoustomerGroup::updateOrCreate(
+            ['dokan_id' => $dokan->id, 'name' => 'VIP Regulars'],
+            [
+                'discount_type'  => CoustomerGroup::TYPE_PERCENTAGE, // 5% Discount
+                'discount_value' => 5.00,
+                'is_active'      => true,
+            ]
+        );
+
+        // 5. Create Sample Customers for Demo Dokan
         $customers = [
             [
-                'name'      => 'Rahul Sharma',
-                'phone'     => '9830012345',
-                'email'     => 'rahul.sharma@example.com',
-                'shop_name' => 'Sharma Corner Shop',
+                'name'               => 'Rahul Sharma',
+                'phone'              => '9830012345',
+                'email'              => 'rahul.sharma@example.com',
+                'shop_name'          => 'Sharma Corner Shop',
+                'coustomer_group_id' => $wholesaleGroup->id,
             ],
             [
-                'name'      => 'Priya Roy',
-                'phone'     => '9831123456',
-                'email'     => 'priya.roy@example.com',
-                'shop_name' => 'Roy Variety Store',
+                'name'               => 'Priya Roy',
+                'phone'              => '9831123456',
+                'email'              => 'priya.roy@example.com',
+                'shop_name'          => 'Roy Variety Store',
+                'coustomer_group_id' => $familyGroup->id,
             ],
             [
-                'name'      => 'Amit Patel',
-                'phone'     => '9832234567',
-                'email'     => 'amit.patel@example.com',
-                'shop_name' => 'Patel Supermarket',
+                'name'               => 'Amit Patel',
+                'phone'              => '9832234567',
+                'email'              => 'amit.patel@example.com',
+                'shop_name'          => 'Patel Supermarket',
+                'coustomer_group_id' => $vipGroup->id,
             ],
             [
-                'name'      => 'Snehash Sen',
-                'phone'     => '9833345678',
-                'email'     => 'snehash.sen@example.com',
-                'shop_name' => 'Sen Traders',
+                'name'               => 'Snehash Sen',
+                'phone'              => '9833345678',
+                'email'              => 'snehash.sen@example.com',
+                'shop_name'          => 'Sen Traders',
+                'coustomer_group_id' => $wholesaleGroup->id,
             ],
             [
-                'name'      => 'Anjali Gupta',
-                'phone'     => '9834456789',
-                'email'     => 'anjali.gupta@example.com',
-                'shop_name' => 'Gupta Enterprise',
+                'name'               => 'Anjali Gupta',
+                'phone'              => '9834456789',
+                'email'              => 'anjali.gupta@example.com',
+                'shop_name'          => 'Gupta Enterprise',
+                'coustomer_group_id' => null, // Regular customer
             ],
         ];
 

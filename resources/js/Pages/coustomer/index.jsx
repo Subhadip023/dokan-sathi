@@ -7,26 +7,37 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import Modal from '@/Components/Modal';
 import Input from '@/Components/Input';
 import Pagination from '@/Components/Pagination';
-import { FaRegEdit, FaUserPlus, FaPhoneAlt, FaUser, FaStore, FaEnvelope, FaUserCheck } from 'react-icons/fa';
+import { FaRegEdit, FaUserPlus, FaPhoneAlt, FaUser, FaStore, FaEnvelope, FaUserCheck, FaTags, FaPlus, FaTrash, FaCheck, FaTimes } from 'react-icons/fa';
 import { MdDeleteOutline } from 'react-icons/md';
 import debounce from 'lodash/debounce';
 
-export default function CustomerIndex({ coustomers, filters }) {
+export default function CustomerIndex({ coustomers, groups = [], filters }) {
     const current_dokan = usePage().props.auth.current_dokan;
     const user = usePage().props.auth.user;
     const isOwner = (user?.role ?? 1) === 1;
 
     const [showModal, setShowModal] = useState(false);
+    const [showGroupModal, setShowGroupModal] = useState(false);
+    const [editingGroup, setEditingGroup] = useState(null);
     const [search, setSearch] = useState(filters.search || '');
     const [isEdit, setIsEdit] = useState(false);
 
     const { data, setData, post, errors, put, delete: deleteCustomer, reset } = useForm({
         id: null,
         dokan_id: current_dokan?.id,
+        coustomer_group_id: '',
         name: '',
         phone: '',
         email: '',
         shop_name: '',
+    });
+
+    // Customer Group Form
+    const groupForm = useForm({
+        name: '',
+        discount_type: 1, // 1: Percentage, 2: Fixed, 3: Cost Plus
+        discount_value: '',
+        is_active: true,
     });
 
     const performSearch = useCallback(
@@ -51,6 +62,7 @@ export default function CustomerIndex({ coustomers, filters }) {
         setData({
             id: null,
             dokan_id: current_dokan?.id,
+            coustomer_group_id: '',
             name: '',
             phone: '',
             email: '',
@@ -69,12 +81,66 @@ export default function CustomerIndex({ coustomers, filters }) {
         setData({
             id: customer.id,
             dokan_id: current_dokan?.id,
+            coustomer_group_id: customer.coustomer_group_id || '',
             name: customer.name || '',
             phone: customer.phone || '',
             email: customer.email || '',
             shop_name: customer.shop_name || '',
         });
         setShowModal(true);
+    };
+
+    const resetGroupForm = () => {
+        setEditingGroup(null);
+        groupForm.reset();
+        groupForm.setData({
+            name: '',
+            discount_type: 1,
+            discount_value: '',
+            is_active: true,
+        });
+    };
+
+    const startEditGroup = (group) => {
+        setEditingGroup(group);
+        groupForm.setData({
+            name: group.name,
+            discount_type: group.discount_type,
+            discount_value: group.discount_value,
+            is_active: Boolean(group.is_active),
+        });
+    };
+
+    const saveGroup = (e) => {
+        e.preventDefault();
+        if (editingGroup) {
+            groupForm.put(route('coustomer-groups.update', editingGroup.id), {
+                onSuccess: () => {
+                    toast.success('Customer group updated successfully');
+                    resetGroupForm();
+                },
+                onError: () => toast.error('Failed to update group')
+            });
+        } else {
+            groupForm.post(route('coustomer-groups.store'), {
+                onSuccess: () => {
+                    toast.success('Customer group created successfully');
+                    resetGroupForm();
+                },
+                onError: () => toast.error('Failed to create group')
+            });
+        }
+    };
+
+    const handleDeleteGroup = (groupId, groupName) => {
+        if (!confirm(`Are you sure you want to delete group "${groupName}"? Customers in this group will become regular customers.`)) {
+            return;
+        }
+
+        router.delete(route('coustomer-groups.destroy', groupId), {
+            onSuccess: () => toast.success('Customer group deleted successfully'),
+            onError: () => toast.error('Failed to delete customer group')
+        });
     };
 
     const saveForm = (e) => {
@@ -175,6 +241,41 @@ export default function CustomerIndex({ coustomers, filters }) {
                             />
                         </div>
 
+                        <div>
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="block text-xs font-semibold text-gray-700">
+                                    Customer Group / Pricing Tier
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        resetGroupForm();
+                                        setShowGroupModal(true);
+                                    }}
+                                    className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold"
+                                >
+                                    + Manage Groups
+                                </button>
+                            </div>
+                            <select
+                                id="coustomer_group_id"
+                                name="coustomer_group_id"
+                                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                                value={data.coustomer_group_id || ''}
+                                onChange={(e) => setData('coustomer_group_id', e.target.value)}
+                            >
+                                <option value="">Regular / None (Standard Selling Price)</option>
+                                {groups.map((g) => (
+                                    <option key={g.id} value={g.id}>
+                                        {g.name} ({g.discount_type === 1 ? `${g.discount_value}% Discount` : g.discount_type === 2 ? `₹${g.discount_value} Flat Discount` : `Cost + ₹${g.discount_value} Transport`})
+                                    </option>
+                                ))}
+                            </select>
+                            <p className="text-[11px] text-gray-500 mt-1">
+                                Assigning a group automatically sets special pricing for this customer at POS billing checkout.
+                            </p>
+                        </div>
+
                         <div className="w-full mt-4 flex items-center justify-end gap-x-3">
                             <SecondaryButton
                                 onClick={() => {
@@ -189,6 +290,200 @@ export default function CustomerIndex({ coustomers, filters }) {
                             </PrimaryButton>
                         </div>
                     </form>
+                </div>
+            </Modal>
+
+            {/* Modal for Managing Customer Groups */}
+            <Modal show={showGroupModal} onClose={() => setShowGroupModal(false)} maxWidth="2xl">
+                <div className="p-6 text-gray-900">
+                    <div className="flex items-center justify-between border-b pb-3 mb-4">
+                        <div className="flex items-center gap-2">
+                            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                                <FaTags size={18} />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-900">
+                                    Customer Groups & Pricing Tiers
+                                </h2>
+                                <p className="text-xs text-gray-500">
+                                    Create custom pricing rules (Wholesale % discount, Family Cost + Transport fee, etc.)
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setShowGroupModal(false)}
+                            className="p-1 rounded-md text-gray-400 hover:text-gray-600"
+                        >
+                            <FaTimes size={16} />
+                        </button>
+                    </div>
+
+                    {/* Group Create/Edit Form */}
+                    <form onSubmit={saveGroup} className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6">
+                        <h3 className="text-xs uppercase font-bold text-gray-700 tracking-wider mb-3">
+                            {editingGroup ? `Edit Group: ${editingGroup.name}` : 'Create New Customer Group'}
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-700 mb-1">Group Name *</label>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. Family, Wholesale, VIP"
+                                    className="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-xs"
+                                    value={groupForm.data.name}
+                                    onChange={(e) => groupForm.setData('name', e.target.value)}
+                                />
+                                {groupForm.errors.name && (
+                                    <div className="text-red-500 text-[11px] mt-1">{groupForm.errors.name}</div>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-700 mb-1">Pricing Rule Type *</label>
+                                <select
+                                    className="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-xs font-medium"
+                                    value={groupForm.data.discount_type}
+                                    onChange={(e) => groupForm.setData('discount_type', parseInt(e.target.value))}
+                                >
+                                    <option value="1">1. Percentage (% Off Retail)</option>
+                                    <option value="2">2. Flat Discount (₹ Off Retail)</option>
+                                    <option value="3">3. Cost + Transport Fee (Family)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                                    {groupForm.data.discount_type === 1 && 'Discount Percentage (%) *'}
+                                    {groupForm.data.discount_type === 2 && 'Flat Discount (₹) *'}
+                                    {groupForm.data.discount_type === 3 && 'Transportation / Extra Fee (₹) *'}
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    required
+                                    placeholder={groupForm.data.discount_type === 1 ? 'e.g. 10 for 10%' : 'e.g. 5.00 for ₹5'}
+                                    className="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-xs font-mono"
+                                    value={groupForm.data.discount_value}
+                                    onChange={(e) => groupForm.setData('discount_value', e.target.value)}
+                                />
+                                {groupForm.errors.discount_value && (
+                                    <div className="text-red-500 text-[11px] mt-1">{groupForm.errors.discount_value}</div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-200">
+                            <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-700">
+                                <input
+                                    type="checkbox"
+                                    checked={groupForm.data.is_active}
+                                    onChange={(e) => groupForm.setData('is_active', e.target.checked)}
+                                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                />
+                                <span className="font-medium">Active (Pricing rule enabled)</span>
+                            </label>
+
+                            <div className="flex items-center gap-2">
+                                {editingGroup && (
+                                    <button
+                                        type="button"
+                                        onClick={resetGroupForm}
+                                        className="px-3 py-1.5 text-xs text-gray-600 hover:text-gray-800 font-semibold"
+                                    >
+                                        Cancel Edit
+                                    </button>
+                                )}
+                                <PrimaryButton disabled={groupForm.processing} className="text-xs py-1.5 px-3">
+                                    {editingGroup ? 'Update Group' : 'Save Customer Group'}
+                                </PrimaryButton>
+                            </div>
+                        </div>
+                    </form>
+
+                    {/* Existing Groups Table */}
+                    <div>
+                        <h3 className="text-xs uppercase font-bold text-gray-700 tracking-wider mb-2">
+                            Active Customer Groups ({groups.length})
+                        </h3>
+                        {groups.length === 0 ? (
+                            <div className="text-center py-6 bg-gray-50 rounded-lg text-xs text-gray-500">
+                                No customer groups created yet. Use the form above to add your first group.
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                                <table className="w-full text-left text-xs">
+                                    <thead className="bg-gray-100 text-gray-600 font-semibold uppercase">
+                                        <tr>
+                                            <th className="py-2 px-3">Group Name</th>
+                                            <th className="py-2 px-3">Pricing Rule</th>
+                                            <th className="py-2 px-3">Value</th>
+                                            <th className="py-2 px-3 text-center">Status</th>
+                                            <th className="py-2 px-3 text-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {groups.map((g) => (
+                                            <tr key={g.id} className="hover:bg-gray-50/50">
+                                                <td className="py-2.5 px-3 font-bold text-gray-900">{g.name}</td>
+                                                <td className="py-2.5 px-3">
+                                                    {g.discount_type === 1 && (
+                                                        <span className="text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded font-semibold">
+                                                            Percentage Discount
+                                                        </span>
+                                                    )}
+                                                    {g.discount_type === 2 && (
+                                                        <span className="text-blue-700 bg-blue-50 px-2 py-0.5 rounded font-semibold">
+                                                            Flat Discount off Retail
+                                                        </span>
+                                                    )}
+                                                    {g.discount_type === 3 && (
+                                                        <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-semibold">
+                                                            Cost Price + Transport Fee
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="py-2.5 px-3 font-mono font-bold">
+                                                    {g.discount_type === 1 ? `${g.discount_value}%` : `₹${g.discount_value}`}
+                                                </td>
+                                                <td className="py-2.5 px-3 text-center">
+                                                    {g.is_active ? (
+                                                        <span className="inline-flex items-center text-[10px] text-green-700 bg-green-50 px-2 py-0.5 rounded-full font-bold">
+                                                            Active
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                                                            Inactive
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="py-2.5 px-3 text-center">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => startEditGroup(g)}
+                                                            className="text-blue-600 hover:text-blue-800 font-semibold"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDeleteGroup(g.id, g.name)}
+                                                            className="text-red-600 hover:text-red-800 font-semibold"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </Modal>
 
@@ -208,13 +503,26 @@ export default function CustomerIndex({ coustomers, filters }) {
                                         onChange={handleSearchChange}
                                         addClass="w-full md:w-1/2"
                                     />
-                                    <PrimaryButton
-                                        onClick={openAddModal}
-                                        className="w-full md:w-auto flex items-center justify-center py-2.5"
-                                    >
-                                        <FaUserPlus className="mr-2 h-4 w-4" />
-                                        Add Customer
-                                    </PrimaryButton>
+                                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                resetGroupForm();
+                                                setShowGroupModal(true);
+                                            }}
+                                            className="px-4 py-2.5 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg text-xs font-bold text-gray-700 shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                                        >
+                                            <FaTags className="text-indigo-600" />
+                                            Customer Groups ({groups.length})
+                                        </button>
+                                        <PrimaryButton
+                                            onClick={openAddModal}
+                                            className="w-full sm:w-auto flex items-center justify-center py-2.5"
+                                        >
+                                            <FaUserPlus className="mr-2 h-4 w-4" />
+                                            Add Customer
+                                        </PrimaryButton>
+                                    </div>
                                 </div>
                             </div>
 
@@ -261,6 +569,13 @@ export default function CustomerIndex({ coustomers, filters }) {
                                                                             <FaStore className="mr-1 text-indigo-500" size={10} />
                                                                             {customer.shop_name}
                                                                         </span>
+                                                                    )}
+                                                                    {customer.group && (
+                                                                        <div className="mt-1">
+                                                                            <span className="inline-flex items-center text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                                                                                🏷️ {customer.group.name} ({customer.group.discount_type === 1 ? `${customer.group.discount_value}% off` : customer.group.discount_type === 2 ? `₹${customer.group.discount_value} off` : `Cost + ₹${customer.group.discount_value}`})
+                                                                            </span>
+                                                                        </div>
                                                                     )}
                                                                 </div>
                                                             </div>
@@ -342,6 +657,7 @@ export default function CustomerIndex({ coustomers, filters }) {
                                                         <tr>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100 w-12">#</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Customer & Shop Name</th>
+                                                            <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Customer Group</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Phone & Email</th>
                                                             <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Sales & Due (₹)</th>
                                                             {isOwner && <th className="px-4 py-3 title-font tracking-wider font-medium text-gray-900 text-sm bg-gray-100">Total Profit (₹)</th>}
@@ -371,6 +687,21 @@ export default function CustomerIndex({ coustomers, filters }) {
                                                                             )}
                                                                         </div>
                                                                     </div>
+                                                                </td>
+                                                                <td className="px-4 py-3 text-xs">
+                                                                    {customer.group ? (
+                                                                        <span className="inline-flex items-center text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full whitespace-nowrap">
+                                                                            <span className="mr-1">🏷️</span>
+                                                                            {customer.group.name}
+                                                                            <span className="ml-1 text-[11px] font-mono text-emerald-600">
+                                                                                ({customer.group.discount_type === 1 ? `${customer.group.discount_value}% off` : customer.group.discount_type === 2 ? `₹${customer.group.discount_value} off` : `Cost + ₹${customer.group.discount_value}`})
+                                                                            </span>
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="inline-flex items-center text-xs text-gray-400 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-full">
+                                                                            Regular
+                                                                        </span>
+                                                                    )}
                                                                 </td>
                                                                 <td className="px-4 py-3 text-gray-700 text-xs">
                                                                     <div className="flex flex-col space-y-1">

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCoustomerRequest;
 use App\Http\Requests\UpdateCoustomerRequest;
 use App\Models\Coustomer;
+use App\Models\CoustomerGroup;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,7 +22,7 @@ class CoustomerController extends Controller
         $dokan = $user->currentDokan();
         $dokanId = $dokan?->id;
 
-        $coustomers = Coustomer::with(['addedBy:id,name', 'editedBy:id,name', 'sales'])
+        $coustomers = Coustomer::with(['addedBy:id,name', 'editedBy:id,name', 'group', 'sales'])
             ->where('dokan_id', $dokanId)
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -44,8 +45,11 @@ class CoustomerController extends Controller
             return $customer;
         });
 
+        $groups = CoustomerGroup::where('dokan_id', $dokanId)->orderBy('name')->get();
+
         return Inertia::render('coustomer/index', [
             'coustomers' => $coustomers,
+            'groups' => $groups,
             'filters' => $request->only(['search']),
         ]);
     }
